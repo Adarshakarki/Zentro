@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zentro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav id="mainNav">
+    <a class="logo" href="#" id="logoLink">Zentro</a>
+    <div class="nav-links">
+      <button class="nav-link active" data-page="home"    id="navHome">Home</button>
+      <button class="nav-link live-link" data-page="live" id="navLive">● Live</button>
+      <button class="nav-link" data-page="library"        id="navLibrary">Library</button>
+    </div>
+    <form class="search-form" id="searchForm">
+      <input type="text" id="searchInput" placeholder="Search…" autocomplete="off">
+      <button type="submit" aria-label="Search">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+    </form>
+  </nav>
+
+  <main id="app"></main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

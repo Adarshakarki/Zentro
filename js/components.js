@@ -1,0 +1,84 @@
+/* ── COMPONENTS ──────────────────────────────────── */
+import { img }      from './config.js';
+import { progress } from './storage.js';
+
+export const mk = (tag, cls = '', html = '') => {
+  const el = document.createElement(tag);
+  if (cls)  el.className = cls;
+  if (html) el.innerHTML = html;
+  return el;
+};
+
+export function Loader(msg = '') {
+  return mk('div', 'state-loader',
+    `<div class="spin-ring"><div></div><div></div><div></div><div></div></div>${msg ? `<span>${msg}</span>` : ''}`);
+}
+
+export function Empty(icon = '🎬', title = 'Nothing here', sub = '') {
+  return mk('div', 'state-empty',
+    `<div class="empty-icon">${icon}</div><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}`);
+}
+
+/* Full-cover poster card */
+export function Card({ item, type, onClick, showType = false }) {
+  const title   = item.title || item.name;
+  const year    = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const rating  = item.vote_average ? item.vote_average.toFixed(1) : null;
+  const poster  = img(item.poster_path, 'w342');
+  const mtype   = type || item.media_type || 'movie';
+  const pKey    = mtype === 'movie' ? `movie_${item.id}` : `tv_${item.id}_s1_e1`;
+  const prog    = progress.get(pKey);
+
+  const card = mk('div', 'card');
+  card.innerHTML = `
+    <div class="card-thumb">
+      ${poster
+        ? `<img src="${poster}" alt="${title}" loading="lazy">`
+        : `<div class="card-ph">🎬</div>`}
+      <div class="card-overlay">
+        <div class="card-play-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      ${rating ? `<div class="card-rating">★ ${rating}</div>` : ''}
+      ${showType ? `<div class="card-type">${mtype === 'tv' ? 'TV' : 'Film'}</div>` : ''}
+      ${prog ? `<div class="card-progress-bar"><div class="card-progress-fill" style="width:${prog.p}%"></div></div>` : ''}
+    </div>
+    <div class="card-body">
+      <div class="card-title">${title}</div>
+      <div class="card-foot">
+        ${year ? `<span class="card-year">${year}</span>` : ''}
+        ${prog ? `<span class="card-time-left">${progress.label(pKey) || ''}</span>` : ''}
+      </div>
+    </div>`;
+
+  card.addEventListener('click', () => onClick(item, mtype));
+  return card;
+}
+
+/* Horizontal row */
+export function Row({ label, sublabel = '', items, type, onCard, showType = false }) {
+  const sec = mk('div', 'row-section');
+  sec.innerHTML = `
+    <div class="row-head">
+      <h2 class="row-title">${label}</h2>
+      ${sublabel ? `<span class="row-sub">${sublabel}</span>` : ''}
+    </div>`;
+  const track = mk('div', 'row-track');
+  items.forEach(i => track.appendChild(Card({ item: i, type, onClick: onCard, showType })));
+  const scroll = mk('div', 'row-scroller');
+  scroll.appendChild(track);
+  sec.appendChild(scroll);
+  return sec;
+}
+
+/* Tab bar */
+export function Tabs(tabs, active, onChange) {
+  const bar = mk('div', 'tab-bar');
+  tabs.forEach(([id, label]) => {
+    const b = mk('button', `tab-item${id === active ? ' active' : ''}`, label);
+    b.addEventListener('click', () => onChange(id));
+    bar.appendChild(b);
+  });
+  return bar;
+}
