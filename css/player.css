@@ -1,0 +1,83 @@
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.player-modal {
+  position: relative;
+  width: 96vw;
+  height: 54vw;
+  max-width: 1400px;
+  max-height: 96vh;
+  background: #000;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  isolation: isolate;
+}
+.player-modal iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  pointer-events: all;
+  position: relative;
+  z-index: 1;
+}
+.player-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--ease);
+  backdrop-filter: blur(8px);
+}
+.player-close:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: var(--text2);
+}
+
+.live-fs-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: var(--live);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  animation: livePulse 1.5s ease infinite;
+  pointer-events: none;
+}
+.live-fs-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--muted);
+  font-size: 13px;
+}

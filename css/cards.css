@@ -1,0 +1,186 @@
+.card {
+  width: 164px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface);
+  transition:
+    transform var(--ease),
+    box-shadow var(--ease);
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+.card:hover .card-overlay {
+  opacity: 1;
+}
+.card:hover .card-thumb img {
+  transform: scale(1.05);
+}
+.card-grid .card {
+  width: 100%;
+}
+
+.card-thumb {
+  position: relative;
+  aspect-ratio: 2/3;
+  width: 100%;
+  background: var(--surface2);
+  overflow: hidden;
+  border-radius: var(--r-lg);
+}
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.4s ease;
+}
+.card-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lg);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 16px;
+  opacity: 0;
+  transition: opacity var(--ease);
+}
+.card-play-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--ease);
+}
+.card:hover .card-play-icon {
+  transform: scale(1.08);
+}
+
+.card-rating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 5px;
+  backdrop-filter: blur(6px);
+}
+.card-type {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  backdrop-filter: blur(6px);
+}
+.card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.card-progress-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.card-body {
+  padding: 10px 4px 4px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-year {
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-time-left {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.lib-card .card-thumb {
+  position: relative;
+}
+.lib-remove-btn {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 5;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--ease),
+    color var(--ease),
+    background var(--ease);
+}
+.lib-card:hover .lib-remove-btn {
+  opacity: 1;
+}
+.lib-remove-btn:hover {
+  color: var(--danger);
+  background: rgba(0, 0, 0, 0.9);
+}

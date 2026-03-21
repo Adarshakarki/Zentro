@@ -1,0 +1,201 @@
+#mainNav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.95),
+    rgba(10, 10, 10, 0.8)
+  );
+  backdrop-filter: blur(20px);
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    background var(--ease),
+    border-color var(--ease);
+}
+#mainNav.nav-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+#mainNav.nav-force-hide {
+  display: none;
+}
+#mainNav.nav-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.6) 0%,
+    transparent 100%
+  );
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.logo-img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.search-form {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 360px;
+  transition:
+    border-color var(--ease),
+    box-shadow var(--ease),
+    background var(--ease);
+}
+.search-form:focus-within {
+  background: var(--surface2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(22, 255, 0, 0.1);
+}
+.search-form svg {
+  flex-shrink: 0;
+  margin-left: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}
+.search-form input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+  padding: 9px 14px;
+  width: 100%;
+}
+.search-form input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.nav-link {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all var(--ease);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.nav-link:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+.nav-link.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+}
+.nav-vidking {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+}
+.nav-vidking:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nav-browse-wrap {
+  position: relative;
+}
+.nav-browse-btn svg {
+  transition: transform var(--ease);
+}
+.nav-browse-wrap.open .nav-browse-btn svg {
+  transform: rotate(180deg);
+}
+.nav-browse-wrap.open .nav-browse-btn {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.browse-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: rgba(18, 18, 18, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.nav-browse-wrap.open .browse-dropdown {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+.browse-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--ease);
+}
+.browse-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+.browse-item svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+#app {
+  min-height: 100vh;
+}
+#mainNav:not(.nav-overlay):not(.nav-hidden):not(.nav-force-hide) ~ #app {
+  padding-top: 60px;
+}

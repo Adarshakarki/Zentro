@@ -4,31 +4,56 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zentro</title>
+  <link rel="icon" href="assets/circlelogo.png" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/adblocker.js"></script>
 </head>
 <body>
 
   <nav id="mainNav">
-    <a class="logo" href="#" id="logoLink">Zentro</a>
-    <div class="nav-links">
-      <button class="nav-link active" data-page="home"    id="navHome">Home</button>
-      <button class="nav-link live-link" data-page="live" id="navLive">● Live</button>
-      <button class="nav-link" data-page="library"        id="navLibrary">Library</button>
+    <div class="nav-left">
+      <a class="logo" href="#/">
+        <img src="assets/logo.png" alt="Zentro" class="logo-img">
+      </a>
     </div>
+
     <form class="search-form" id="searchForm">
-      <input type="text" id="searchInput" placeholder="Search…" autocomplete="off">
-      <button type="submit" aria-label="Search">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-      </button>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search movies &amp; shows…" autocomplete="off">
     </form>
+
+    <div class="nav-right">
+      <button class="nav-link active" id="navHome">Home</button>
+      <button class="nav-link" id="navLibrary">Library</button>
+      <div class="nav-browse-wrap" id="browseWrap">
+        <button class="nav-link nav-browse-btn" id="navBrowse">
+          Browse
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="browse-dropdown" id="browseDropdown">
+          <button class="browse-item" data-go="movies">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m10 0h4M3 16h4m10 0h4"/></svg>
+            Movies
+          </button>
+          <button class="browse-item" data-go="series">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10"/><rect width="20" height="14" x="2" y="3" rx="2"/></svg>
+            Series
+          </button>
+          <button class="browse-item" data-go="live">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M20.07 4a10 10 0 0 1 0 16M3.93 20a10 10 0 0 1 0-16"/></svg>
+            Live TV
+          </button>
+        </div>
+      </div>
+      <a class="nav-link nav-vidking" href="https://www.vidking.net/" target="_blank" rel="noopener">API ↗</a>
+    </div>
   </nav>
 
   <main id="app"></main>
-
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
