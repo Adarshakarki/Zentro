@@ -1,4 +1,4 @@
-const WORKER_URL = 'zentro-tmdb.adarsha99999.workers.dev';
+const WORKER_URL = 'https://zentro-tmdb.adarsha99999.workers.dev';
 
 export const TMDB = {
   base:
@@ -16,11 +16,16 @@ export const TMDB = {
   },
 };
 
-import('./env.js')
-  .then(({ TMDB_KEY }) => {
-    window._tmdbKey = TMDB_KEY;
-  })
-  .catch(() => {});
+if (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+) {
+  import('./env.js')
+    .then(({ TMDB_KEY }) => {
+      window._tmdbKey = TMDB_KEY;
+    })
+    .catch(() => {});
+}
 
 export const img = (path, size = 'w342') =>
   path
