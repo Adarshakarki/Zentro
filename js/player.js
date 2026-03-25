@@ -10,7 +10,6 @@ function trackProgress(key) {
       const msg = JSON.parse(e.data);
       if (msg.type !== 'PLAYER_EVENT') return;
       const { event, currentTime, duration, progress: pct } = msg.data;
-      /* track on timeupdate, pause, ended, seeked */
       if (
         ['timeupdate', 'pause', 'ended', 'seeked'].includes(event) &&
         currentTime > 5
@@ -31,26 +30,23 @@ export function openPlayer(src, progressKey) {
   document.querySelector('.player-overlay')?.remove();
 
   const overlay = mk('div', 'player-overlay');
-  const modal = mk('div', 'player-modal');
   const closeBtn = mk('button', 'player-close');
   const iframe = document.createElement('iframe');
 
-  closeBtn.innerHTML = icon('x', 18);
+  closeBtn.innerHTML = icon('x', 20);
   iframe.src = src;
   iframe.setAttribute(
     'allow',
     'autoplay; fullscreen; encrypted-media; picture-in-picture'
   );
   iframe.setAttribute('frameborder', '0');
-  /* sandbox blocks iframe from opening new tabs — omits allow-popups and allow-top-navigation intentionally */
   iframe.setAttribute(
     'sandbox',
     'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock'
   );
 
-  modal.appendChild(closeBtn);
-  modal.appendChild(iframe);
-  overlay.appendChild(modal);
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(iframe);
   document.body.appendChild(overlay);
 
   const cleanup = progressKey ? trackProgress(progressKey) : () => {};
@@ -59,26 +55,24 @@ export function openPlayer(src, progressKey) {
     cleanup();
     iframe.src = '';
     overlay.remove();
+    document.removeEventListener('keydown', onKey);
   };
-
-  closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
-  });
 
   const onKey = (e) => {
-    if (e.key === 'Escape') {
-      close();
-      document.removeEventListener('keydown', onKey);
-    }
+    if (e.key === 'Escape') close();
   };
+
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    close();
+  };
+
   document.addEventListener('keydown', onKey);
 }
 
 export function openMoviePlayer(item) {
   const key = `movie_${item.id}`;
   const saved = progress.get(key);
-  /* resume using Vidking's timestamp param */
   const opts = saved?.t > 10 ? { timestamp: saved.t } : {};
   openPlayer(embed.movie(item.id, opts), key);
 }
