@@ -106,16 +106,16 @@ export async function DetailView(item, type, onBack, onCard) {
     wlBtn.innerHTML = `${icon('bookmark', 15, { fill: inWl ? 'currentColor' : 'none' })} ${inWl ? 'Saved' : 'Watchlist'}`;
     acts.appendChild(wlBtn);
 
-    if (type === 'tv') {
-      const epScrollBtn = mk('button', 'action-btn ghost');
-      epScrollBtn.innerHTML = `${icon('list', 15)} Episodes`;
-      epScrollBtn.addEventListener('click', () =>
-        root
-          .querySelector('.detail-episodes')
-          ?.scrollIntoView({ behavior: 'smooth' })
-      );
-      acts.appendChild(epScrollBtn);
+    /* download via vidvault.ru — movies only (TV has per-episode download links) */
+    if (type === 'movie') {
+      const dlBtn = mk('a', 'action-btn ghost action-dl');
+      dlBtn.href = `https://vidvault.ru/movie/${item.id}`;
+      dlBtn.target = '_blank';
+      dlBtn.rel = 'noopener';
+      dlBtn.innerHTML = `${icon('download', 15)} Download`;
+      acts.appendChild(dlBtn);
     }
+
     content.appendChild(acts);
 
     /* movie player */
@@ -174,6 +174,9 @@ export async function DetailView(item, type, onBack, onCard) {
                   <div class="ep-header">
                     <span class="ep-num">E${ep.episode_number}</span>
                     ${ep.runtime ? `<span class="ep-runtime">${ep.runtime}m</span>` : ''}
+                    <a class="ep-download" href="https://vidvault.ru/tv/${item.id}/${n}/${ep.episode_number}" target="_blank" rel="noopener" title="Download" onclick="event.stopPropagation()">
+                      ${icon('download', 13)}
+                    </a>
                   </div>
                   <div class="ep-name">${ep.name || ''}</div>
                   ${overviewTxt ? `<div class="ep-overview">${overviewTxt}</div>` : ''}

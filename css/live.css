@@ -3,91 +3,22 @@
   margin: 0 auto;
   padding: 0 28px 80px;
 }
+
 .live-heading {
   padding: 20px 4px 24px;
 }
 .live-title {
-  font-family: 'Playfair Display', serif;
   font-size: 32px;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 10px;
   margin-bottom: 6px;
-}
-.live-dot-lg {
-  color: var(--live);
-  font-size: 16px;
-  animation: livePulse 1.5s ease infinite;
 }
 .live-sub {
   font-size: 14px;
   color: var(--text2);
 }
-
-.live-player-area {
-  margin-bottom: 28px;
-}
-
-.live-player-placeholder {
-  aspect-ratio: 16/9;
-  max-height: 480px;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  border: 1px dashed var(--border2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.live-player-wrap {
-  position: relative;
-  aspect-ratio: 16/9;
-  max-height: 480px;
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  background: #000;
-}
-.live-player-wrap video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-.live-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 5;
-  background: var(--live);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  animation: livePulse 1.5s ease infinite;
-}
-.live-loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--muted);
-  font-size: 13px;
-}
-.live-err {
-  color: var(--danger);
-  font-size: 13px;
-}
+.live-legend  { font-size: 12px; color: var(--muted); }
+.dot-online   { color: var(--accent); }
+.dot-offline  { color: var(--danger); }
 
 .live-cats {
   display: flex;
@@ -154,7 +85,6 @@
 }
 
 .ch-thumb {
-  position: relative;
   width: 56px;
   height: 40px;
   margin: 0 auto 10px;
@@ -173,18 +103,6 @@
   font-weight: 700;
   color: var(--text2);
 }
-.ch-live-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--live);
-  color: #fff;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  padding: 1px 4px;
-  border-radius: 3px;
-}
 .ch-name {
   font-size: 12px;
   font-weight: 600;
@@ -198,12 +116,26 @@
   letter-spacing: 0.5px;
 }
 
+.ch-status {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+  transition: color 0.3s ease;
+}
+.ch-status.checking { color: var(--muted); }
+.ch-status.online   { color: var(--accent); }
+.ch-status.offline  { color: var(--danger); }
+
+.player-overlay video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
 @keyframes livePulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }

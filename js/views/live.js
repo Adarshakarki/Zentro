@@ -3,13 +3,31 @@ import { icon } from '../icons.js';
 
 const API = 'https://iptv-org.github.io/api';
 
-const WANTED = [
+const CATEGORIES = [
   { id: 'sports', label: 'Sports' },
-  { id: 'music', label: 'Music' },
   { id: 'news', label: 'News' },
   { id: 'entertainment', label: 'Entertainment' },
   { id: 'movies', label: 'Movies' },
+  { id: 'music', label: 'Music' },
 ];
+
+const ENGLISH_COUNTRIES = new Set([
+  'US',
+  'GB',
+  'CA',
+  'AU',
+  'IE',
+  'NZ',
+  'ZA',
+  'JM',
+  'TT',
+  'BB',
+  'GH',
+  'NG',
+  'KE',
+  'UG',
+  'TZ',
+]);
 
 let _cache = null;
 
@@ -49,15 +67,47 @@ async function loadData() {
       stream: streamMap[c.id],
       categories: c.categories || [],
       country: c.country || '',
+      languages: c.languages || [],
     }));
 
   const byCategory = {};
-  for (const { id } of WANTED) {
-    byCategory[id] = list.filter((c) => c.categories.includes(id));
+  for (const { id } of CATEGORIES) {
+    if (id === 'sports') {
+      byCategory[id] = list.filter(
+        (c) =>
+          c.categories.includes('sports') && ENGLISH_COUNTRIES.has(c.country)
+      );
+    } else {
+      byCategory[id] = list.filter(
+        (c) =>
+          c.categories.includes(id) &&
+          (c.languages.includes('eng') || ENGLISH_COUNTRIES.has(c.country))
+      );
+    }
   }
 
   _cache = { list, byCategory };
   return _cache;
+}
+
+async function checkStream(url) {
+  try {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(url, { method: 'HEAD', signal: ctrl.signal });
+    clearTimeout(id);
+    return r.ok || r.status === 405;
+  } catch {
+    return false;
+  }
+}
+
+async function attachStatus(card, url) {
+  const badge = card.querySelector('.ch-status');
+  if (!badge) return;
+  const ok = await checkStream(url);
+  badge.className = `ch-status ${ok ? 'online' : 'offline'}`;
+  badge.title = ok ? 'Stream online' : 'Stream may be unavailable';
 }
 
 function loadHLS(url, video, loadingEl) {
@@ -111,7 +161,6 @@ function playChannel(ch, cardEl, area) {
   document.querySelector('.player-overlay')?.remove();
 
   const overlay = mk('div', 'player-overlay');
-  const modal = mk('div', 'player-modal');
   const closeBtn = mk('button', 'player-close');
   const video = document.createElement('video');
   const loading = mk(
@@ -127,15 +176,13 @@ function playChannel(ch, cardEl, area) {
   video.controls = true;
   video.autoplay = true;
   video.playsInline = true;
-  video.style.cssText =
-    'width:100%;height:100%;object-fit:contain;display:block;';
 
-  modal.appendChild(closeBtn);
-  modal.appendChild(badge);
-  modal.appendChild(video);
-  modal.appendChild(loading);
-  overlay.appendChild(modal);
+  overlay.appendChild(video);
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(badge);
+  overlay.appendChild(loading);
   document.body.appendChild(overlay);
+
   loadHLS(ch.stream, video, loading);
 
   const close = () => {
@@ -150,11 +197,8 @@ function playChannel(ch, cardEl, area) {
   };
 
   closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
-  });
   const onKey = (e) => {
-    if (e.key === 'Escape' && !document.fullscreenElement) {
+    if (e.key === 'Escape') {
       close();
       document.removeEventListener('keydown', onKey);
     }
@@ -175,8 +219,8 @@ export async function LiveView(onBack) {
       'div',
       'live-heading',
       `
-    <h1 class="live-title"><span class="live-dot-lg">●</span> Live TV</h1>
-    <p class="live-sub">Click any channel to watch fullscreen</p>`
+    <h1 class="live-title">Live TV</h1>
+    <p class="live-sub">Click any channel to watch fullscreen · <span class="live-legend"><span class="dot-online">●</span> Online <span class="dot-offline">●</span> Offline</span></p>`
     )
   );
 
@@ -201,7 +245,7 @@ export async function LiveView(onBack) {
     }
 
     const grid = mk('div', 'ch-grid');
-    channels.slice(0, 150).forEach((ch) => {
+    channels.slice(0, 100).forEach((ch) => {
       const card = mk('div', 'ch-card');
       card.innerHTML = `
         <div class="ch-thumb">
@@ -210,12 +254,14 @@ export async function LiveView(onBack) {
               ? `<img src="${ch.logo}" alt="${ch.name}" loading="lazy" onerror="this.style.display='none'">`
               : `<span class="ch-initial">${ch.name.charAt(0)}</span>`
           }
-          <span class="ch-live-badge">LIVE</span>
         </div>
         <div class="ch-name">${ch.name}</div>
-        ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}`;
+        ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}
+        <span class="ch-status checking" title="Checking…">●</span>`;
       card.addEventListener('click', () => playChannel(ch, card, area));
       grid.appendChild(card);
+
+      attachStatus(card, ch.stream);
     });
     area.appendChild(grid);
   }
@@ -226,7 +272,7 @@ export async function LiveView(onBack) {
     data = await loadData();
     area.innerHTML = '';
 
-    const available = WANTED.filter(
+    const available = CATEGORIES.filter(
       ({ id }) => (data.byCategory[id]?.length || 0) > 0
     );
     if (!available.length) {
@@ -249,7 +295,7 @@ export async function LiveView(onBack) {
     renderCategory(available[0].id);
   } catch (e) {
     area.innerHTML = '';
-    area.appendChild(Empty('Failed to load', e.message));
+    area.appendChild(Empty('Failed to load channels', e.message));
   }
 
   return root;

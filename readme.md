@@ -36,3 +36,12 @@ Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidking](https://w
 ![library](assets/screenshots/library.png)
 7. Browse
 ![browse](assets/screenshots/browse.png)
+8. Download
+![download](assets/screenshots/download.png)
+
+## Disclaimer
+**Note:** Zentro is a frontend interface only. This project does not host, store, or distribute any media files.
+* Playback: Powered by the [Vidking API](https://www.vidking.net/).
+* Downloads: Handled via [Vidvault](https://vidvault.ru/).
+
+All content is provided by third-party services. For any DMCA or legal inquiries, please contact the respective API providers directly.

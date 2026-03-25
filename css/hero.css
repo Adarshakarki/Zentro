@@ -221,18 +221,6 @@
   gap: 12px;
   width: max-content;
 }
-
-.row-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 28px;
-  margin-bottom: 14px;
-}
-.row-title {
-  font-size: 17px;
-  font-weight: 600;
-}
 .row-toggle {
   display: flex;
   margin-left: 12px;
@@ -257,26 +245,4 @@
 }
 .row-toggle-btn:not(.active):hover {
   color: var(--text);
-}
-
-.row-type-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--surface2);
-  color: var(--text2);
-  border: 1px solid var(--border2);
-}
-.row-type-badge.movie {
-  color: var(--accent);
-  border-color: rgba(22, 255, 0, 0.2);
-  background: rgba(22, 255, 0, 0.06);
-}
-.row-type-badge.series {
-  color: #60a5fa;
-  border-color: rgba(96, 165, 250, 0.2);
-  background: rgba(96, 165, 250, 0.06);
 }
