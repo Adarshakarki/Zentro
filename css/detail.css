@@ -61,7 +61,10 @@
 .dc-chip {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text2);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 .dc-chip.gold {
   color: var(--accent);
@@ -143,7 +146,7 @@
   position: fixed;
   top: 16px;
   left: 20px;
-  z-index: 400;
+  z-index: var(--z-overlay);
   width: 38px;
   height: 38px;
   border-radius: 50%;

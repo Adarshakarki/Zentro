@@ -16,11 +16,13 @@ export const TMDB = {
   },
 };
 
+export let ready = Promise.resolve();
+
 if (
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1'
 ) {
-  import('./env.js')
+  ready = import('./env.js')
     .then(({ TMDB_KEY }) => {
       window._tmdbKey = TMDB_KEY;
     })

@@ -3,6 +3,7 @@ import { DetailView } from './views/detail.js';
 import { SearchView } from './views/search.js';
 import { LibraryView } from './views/library.js';
 import { LiveView } from './views/live.js';
+import { Empty } from './components.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('mainNav');
@@ -53,7 +54,11 @@ function setNav(page) {
     );
 }
 
+let currentViewel = null;
 function mount(el) {
+  if (currentViewel && currentViewel._stop) currentViewel._stop();
+  if (currentViewel) currentViewel.remove();
+  currentViewel = el;
   app.innerHTML = '';
   app.appendChild(el);
   window.scrollTo(0, 0);
@@ -100,57 +105,61 @@ document.querySelectorAll('.browse-item').forEach((btn) => {
 /* router */
 async function go(page, payload = {}) {
   setNav(page);
-  switch (page) {
-    case 'home':
-      mount(
-        await HomeView(
-          (item, type) => go('detail', { item, type }),
-          () => go('live')
-        )
-      );
-      break;
+  try {
+    switch (page) {
+      case 'home':
+        mount(
+          await HomeView(
+            (item, type) => go('detail', { item, type }),
+            () => go('live')
+          )
+        );
+        break;
 
-    case 'detail': {
-      const { item, type } = payload;
-      window.location.hash = `#/${type}/${item.id}`;
-      mount(
-        await DetailView(
-          item,
-          type,
-          () => window.history.back(),
-          (i, t) => go('detail', { item: i, type: t })
-        )
-      );
-      break;
+      case 'detail': {
+        const { item, type } = payload;
+        window.location.hash = `#/${type}/${item.id}`;
+        mount(
+          await DetailView(
+            item,
+            type,
+            () => window.history.back(),
+            (i, t) => go('detail', { item: i, type: t })
+          )
+        );
+        break;
+      }
+
+      case 'browse': {
+        const { type } = payload;
+        window.location.hash = `#/browse/${type}`;
+        const { BrowseView } = await import('./views/browse.js');
+        mount(
+          await BrowseView(type, (item, t) => go('detail', { item, type: t }))
+        );
+        break;
+      }
+
+      case 'search':
+        mount(
+          await SearchView(payload.query, (item, type) =>
+            go('detail', { item, type })
+          )
+        );
+        break;
+
+      case 'library':
+        window.location.hash = '#/library';
+        mount(LibraryView((item, type) => go('detail', { item, type })));
+        break;
+
+      case 'live':
+        window.location.hash = '#/live';
+        mount(await LiveView(() => go('home')));
+        break;
     }
-
-    case 'browse': {
-      const { type } = payload;
-      window.location.hash = `#/browse/${type}`;
-      const { BrowseView } = await import('./views/browse.js');
-      mount(
-        await BrowseView(type, (item, t) => go('detail', { item, type: t }))
-      );
-      break;
-    }
-
-    case 'search':
-      mount(
-        await SearchView(payload.query, (item, type) =>
-          go('detail', { item, type })
-        )
-      );
-      break;
-
-    case 'library':
-      window.location.hash = '#/library';
-      mount(LibraryView((item, type) => go('detail', { item, type })));
-      break;
-
-    case 'live':
-      window.location.hash = '#/live';
-      mount(await LiveView(() => go('home')));
-      break;
+  } catch (err) {
+    mount(Empty('Something went wrong', err.message));
   }
 }
 
@@ -202,7 +211,13 @@ let debounce;
 document.getElementById('searchInput').addEventListener('input', (e) => {
   clearTimeout(debounce);
   const q = e.target.value.trim();
-  if (!q) return;
+  if (!q) {
+    // If search is cleared, revert to home
+    if (window.location.hash.includes('search')) {
+      window.history.back();
+    }
+    return;
+  }
   debounce = setTimeout(() => go('search', { query: q }), 400);
 });
 document.getElementById('searchForm').addEventListener('submit', (e) => {

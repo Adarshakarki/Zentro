@@ -1,5 +1,6 @@
 import { mk, Loader, Empty } from '../components.js';
 import { icon } from '../icons.js';
+import { openLivePlayer } from '../player.js';
 
 const API = 'https://iptv-org.github.io/api';
 
@@ -31,6 +32,19 @@ const ENGLISH_COUNTRIES = new Set([
 
 let _cache = null;
 
+async function checkStatus(url) {
+  try {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 5000);
+    // mode: no-cors allows us to verify connectivity without strict CORS headers
+    await fetch(url, { mode: 'no-cors', signal: ctrl.signal });
+    clearTimeout(id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function loadData() {
   if (_cache) return _cache;
 
@@ -48,15 +62,26 @@ async function loadData() {
 
   const proxyLogo = (url) =>
     url
-      ? `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=120&output=webp&n=-1`
+      ? `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=200&fit=contain&output=webp`
       : null;
 
   const logoMap = {};
   for (const l of logos) {
     if (!l.channel || !l.url) continue;
-    if (!logoMap[l.channel] || l.tags?.includes('horizontal'))
-      logoMap[l.channel] = proxyLogo(l.url);
+
+    const tags = l.tags || [];
+    // Prefer light/horizontal logos for high-contrast visibility
+    const score =
+      (tags.includes('light') || tags.includes('white') ? 10 : 0) +
+      (tags.includes('horizontal') ? 5 : 0) +
+      (tags.includes('transparent') ? 2 : 0);
+
+    if (!logoMap[l.channel] || score > (logoMap[l.channel].score || 0)) {
+      logoMap[l.channel] = { url: proxyLogo(l.url), score };
+    }
   }
+
+  for (const id in logoMap) logoMap[id] = logoMap[id].url;
 
   const list = channels
     .filter((c) => streamMap[c.id] && !c.closed && !c.is_nsfw)
@@ -88,122 +113,6 @@ async function loadData() {
 
   _cache = { list, byCategory };
   return _cache;
-}
-
-async function checkStream(url) {
-  try {
-    const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch(url, { method: 'HEAD', signal: ctrl.signal });
-    clearTimeout(id);
-    return r.ok || r.status === 405;
-  } catch {
-    return false;
-  }
-}
-
-async function attachStatus(card, url) {
-  const badge = card.querySelector('.ch-status');
-  if (!badge) return;
-  const ok = await checkStream(url);
-  badge.className = `ch-status ${ok ? 'online' : 'offline'}`;
-  badge.title = ok ? 'Stream online' : 'Stream may be unavailable';
-}
-
-function loadHLS(url, video, loadingEl) {
-  if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = url;
-    video.addEventListener('canplay', () => loadingEl?.remove(), {
-      once: true,
-    });
-    return;
-  }
-  if (window.Hls) {
-    attachHls(url, video, loadingEl);
-    return;
-  }
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js';
-  s.onload = () => attachHls(url, video, loadingEl);
-  document.head.appendChild(s);
-}
-
-function attachHls(url, video, loadingEl) {
-  if (video._hls) {
-    video._hls.destroy();
-    delete video._hls;
-  }
-  if (!window.Hls?.isSupported()) {
-    video.src = url;
-    loadingEl?.remove();
-    return;
-  }
-  const hls = new window.Hls({ enableWorker: true, lowLatencyMode: true });
-  hls.loadSource(url);
-  hls.attachMedia(video);
-  hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-    loadingEl?.remove();
-    video.play().catch(() => {});
-  });
-  hls.on(window.Hls.Events.ERROR, (_, d) => {
-    if (d.fatal && loadingEl)
-      loadingEl.innerHTML = '<span class="live-err">Stream unavailable</span>';
-  });
-  video._hls = hls;
-}
-
-function playChannel(ch, cardEl, area) {
-  area
-    .querySelectorAll('.ch-card.active')
-    .forEach((c) => c.classList.remove('active'));
-  cardEl.classList.add('active');
-
-  document.querySelector('.player-overlay')?.remove();
-
-  const overlay = mk('div', 'player-overlay');
-  const closeBtn = mk('button', 'player-close');
-  const video = document.createElement('video');
-  const loading = mk(
-    'div',
-    'live-fs-loading',
-    `
-    <div class="spin-ring"><div></div><div></div><div></div><div></div></div>
-    <span>Connecting…</span>`
-  );
-  const badge = mk('div', 'live-fs-badge', '● LIVE');
-
-  closeBtn.innerHTML = icon('x', 18);
-  video.controls = true;
-  video.autoplay = true;
-  video.playsInline = true;
-
-  overlay.appendChild(video);
-  overlay.appendChild(closeBtn);
-  overlay.appendChild(badge);
-  overlay.appendChild(loading);
-  document.body.appendChild(overlay);
-
-  loadHLS(ch.stream, video, loading);
-
-  const close = () => {
-    if (video._hls) {
-      video._hls.destroy();
-      delete video._hls;
-    }
-    video.pause();
-    video.src = '';
-    overlay.remove();
-    cardEl.classList.remove('active');
-  };
-
-  closeBtn.addEventListener('click', close);
-  const onKey = (e) => {
-    if (e.key === 'Escape') {
-      close();
-      document.removeEventListener('keydown', onKey);
-    }
-  };
-  document.addEventListener('keydown', onKey);
 }
 
 export async function LiveView(onBack) {
@@ -257,11 +166,19 @@ export async function LiveView(onBack) {
         </div>
         <div class="ch-name">${ch.name}</div>
         ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}
-        <span class="ch-status checking" title="Checking…">●</span>`;
-      card.addEventListener('click', () => playChannel(ch, card, area));
+        <span class="ch-status checking">●</span>`;
+
+      card.addEventListener('click', () => openLivePlayer(ch.stream, ch.name));
       grid.appendChild(card);
 
-      attachStatus(card, ch.stream);
+      // Perform async check
+      checkStatus(ch.stream).then((isUp) => {
+        const dot = card.querySelector('.ch-status');
+        if (dot) {
+          dot.className = `ch-status ${isUp ? 'online' : 'offline'}`;
+          dot.title = isUp ? 'Online' : 'Offline / Restricted';
+        }
+      });
     });
     area.appendChild(grid);
   }

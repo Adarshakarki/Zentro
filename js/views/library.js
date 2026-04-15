@@ -1,5 +1,5 @@
 import { mk, Empty, Tabs } from '../components.js';
-import { history, watchlist } from '../storage.js';
+import { history, watchlist, progress } from '../storage.js';
 import { img } from '../config.js';
 import { icon } from '../icons.js';
 
@@ -41,16 +41,30 @@ export function LibraryView(onCard) {
     items.forEach((r) => {
       const poster = r.poster ? img(r.poster, 'w342') : null;
 
+      // Calculate progress data
+      const pKey = progress.getKey(
+        r.id,
+        r.type,
+        r.season_number,
+        r.episode_number
+      );
+      const prog = progress.get(pKey);
+      const tLabel = progress.label(pKey);
+
       const card = mk('div', 'card lib-card');
       card.innerHTML = `
         <div class="card-thumb">
           ${poster ? `<img src="${poster}" alt="${r.title}" loading="lazy">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
           <div class="card-overlay"><div class="card-play-icon">${icon('play', 20, { fill: '#000', stroke: 'none' })}</div></div>
           <button class="lib-remove-btn" title="Remove">${icon('x', 13)}</button>
+          ${prog ? `<div class="card-progress-bar"><div class="card-progress-fill" style="width:${prog.p}%"></div></div>` : ''}
         </div>
         <div class="card-body">
           <div class="card-title">${r.title}</div>
-          <div class="card-foot"><span class="card-year">${r.type === 'tv' ? 'Series' : 'Film'}</span></div>
+          <div class="card-foot">
+            <span class="card-year">${r.type === 'tv' ? 'Series' : 'Film'}</span>
+            ${prog && tLabel ? `<span class="card-time-left">${tLabel}</span>` : ''}
+          </div>
         </div>`;
 
       card.querySelector('.lib-remove-btn').addEventListener('click', (e) => {

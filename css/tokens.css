@@ -14,6 +14,13 @@
   --live: #e63946;
   --r: 8px;
   --r-lg: 12px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --z-nav: 300;
+  --z-overlay: 400;
+  --z-modal: 1000;
+  --z-max: 2147483647;
   --ease: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

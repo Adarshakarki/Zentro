@@ -1,42 +1,17 @@
-import { TMDB } from '../config.js';
-import { mk, Empty, Loader } from '../components.js';
-import { img } from '../config.js';
-import { icon } from '../icons.js';
-
-async function tmdb(path, params = {}, page = 1) {
-  const u = new URL(TMDB.base + path);
-  u.searchParams.set('api_key', TMDB.key);
-  u.searchParams.set('page', page);
-  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-  const r = await fetch(u);
-  if (!r.ok) throw new Error(`TMDB ${r.status}`);
-  return r.json();
-}
-
-const disc =
-  (type, providers) =>
-  (page = 1) =>
-    tmdb(
-      `/discover/${type}`,
-      {
-        with_watch_providers: providers,
-        watch_region: 'US',
-        sort_by: 'popularity.desc',
-      },
-      page
-    );
+import { api } from '../api.js';
+import { mk, Empty, Loader, Card } from '../components.js';
 
 const TABS = {
   movie: [
-    { label: 'Popular', fn: (p) => tmdb('/movie/popular', {}, p) },
-    { label: 'Top Rated', fn: (p) => tmdb('/movie/top_rated', {}, p) },
-    { label: 'Now Playing', fn: (p) => tmdb('/movie/now_playing', {}, p) },
-    { label: 'Upcoming', fn: (p) => tmdb('/movie/upcoming', {}, p) },
+    { label: 'Popular', fn: (p) => api.popular('movie', p) },
+    { label: 'Top Rated', fn: (p) => api.topRated(p) },
+    { label: 'Now Playing', fn: (p) => api.nowPlaying(p) },
+    { label: 'Upcoming', fn: (p) => api.upcoming(p) },
     {
       label: 'Action',
       fn: (p) =>
-        tmdb(
-          '/discover/movie',
+        api.discover(
+          'movie',
           { with_genres: '28', sort_by: 'popularity.desc' },
           p
         ),
@@ -44,8 +19,8 @@ const TABS = {
     {
       label: 'Comedy',
       fn: (p) =>
-        tmdb(
-          '/discover/movie',
+        api.discover(
+          'movie',
           { with_genres: '35', sort_by: 'popularity.desc' },
           p
         ),
@@ -53,8 +28,8 @@ const TABS = {
     {
       label: 'Horror',
       fn: (p) =>
-        tmdb(
-          '/discover/movie',
+        api.discover(
+          'movie',
           { with_genres: '27', sort_by: 'popularity.desc' },
           p
         ),
@@ -62,39 +37,27 @@ const TABS = {
     {
       label: 'Sci-Fi',
       fn: (p) =>
-        tmdb(
-          '/discover/movie',
+        api.discover(
+          'movie',
           { with_genres: '878', sort_by: 'popularity.desc' },
           p
         ),
     },
-    { label: 'Netflix', fn: disc('movie', '8') },
-    { label: 'HBO', fn: disc('movie', '1899') },
-    { label: 'Prime', fn: disc('movie', '9') },
-    { label: 'Disney+', fn: disc('movie', '337') },
+    { label: 'Netflix', fn: (p) => api.netflixMovie(p) },
+    { label: 'HBO', fn: (p) => api.hboMovie(p) },
+    { label: 'Prime', fn: (p) => api.primeMovie(p) },
+    { label: 'Disney+', fn: (p) => api.disneyMovie(p) },
   ],
   tv: [
-    { label: 'Popular', fn: (p) => tmdb('/tv/popular', {}, p) },
-    { label: 'Top Rated', fn: (p) => tmdb('/tv/top_rated', {}, p) },
-    { label: 'On The Air', fn: (p) => tmdb('/tv/on_the_air', {}, p) },
-    {
-      label: 'Anime',
-      fn: (p) =>
-        tmdb(
-          '/discover/tv',
-          {
-            with_genres: '16',
-            with_origin_country: 'JP',
-            sort_by: 'popularity.desc',
-          },
-          p
-        ),
-    },
+    { label: 'Popular', fn: (p) => api.popular('tv', p) },
+    { label: 'Top Rated', fn: (p) => api.topRatedTV(p) },
+    { label: 'On The Air', fn: (p) => api.onTheAir(p) },
+    { label: 'Anime', fn: (p) => api.anime(p) },
     {
       label: 'Drama',
       fn: (p) =>
-        tmdb(
-          '/discover/tv',
+        api.discover(
+          'tv',
           { with_genres: '18', sort_by: 'popularity.desc' },
           p
         ),
@@ -102,8 +65,8 @@ const TABS = {
     {
       label: 'Crime',
       fn: (p) =>
-        tmdb(
-          '/discover/tv',
+        api.discover(
+          'tv',
           { with_genres: '80', sort_by: 'popularity.desc' },
           p
         ),
@@ -111,8 +74,8 @@ const TABS = {
     {
       label: 'Comedy',
       fn: (p) =>
-        tmdb(
-          '/discover/tv',
+        api.discover(
+          'tv',
           { with_genres: '35', sort_by: 'popularity.desc' },
           p
         ),
@@ -120,39 +83,19 @@ const TABS = {
     {
       label: 'Reality',
       fn: (p) =>
-        tmdb(
-          '/discover/tv',
+        api.discover(
+          'tv',
           { with_genres: '10764', sort_by: 'popularity.desc' },
           p
         ),
     },
-    { label: 'Netflix', fn: disc('tv', '8') },
-    { label: 'HBO / Max', fn: disc('tv', '1899') },
-    { label: 'Prime Video', fn: disc('tv', '9') },
-    { label: 'Apple TV+', fn: disc('tv', '350') },
-    { label: 'Disney+', fn: disc('tv', '337') },
+    { label: 'Netflix', fn: (p) => api.netflixTV(p) },
+    { label: 'HBO / Max', fn: (p) => api.hboTV(p) },
+    { label: 'Prime Video', fn: (p) => api.primeTV(p) },
+    { label: 'Apple TV+', fn: (p) => api.appleTV(p) },
+    { label: 'Disney+', fn: (p) => api.disneyTV(p) },
   ],
 };
-
-function makeCard(item, type, onCard) {
-  const poster = img(item.poster_path, 'w342');
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
-  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-  const title = item.title || item.name;
-  const card = mk('div', 'card');
-  card.innerHTML = `
-    <div class="card-thumb">
-      ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
-      <div class="card-overlay"><div class="card-play-icon">${icon('play', 20, { fill: '#000', stroke: 'none' })}</div></div>
-      ${rating ? `<div class="card-rating">★ ${rating}</div>` : ''}
-    </div>
-    <div class="card-body">
-      <div class="card-title">${title}</div>
-      ${year ? `<div class="card-foot"><span class="card-year">${year}</span></div>` : ''}
-    </div>`;
-  card.addEventListener('click', () => onCard(item, type));
-  return card;
-}
 
 export async function BrowseView(type, onCard) {
   const root = mk('div', 'browse-view');
@@ -203,7 +146,9 @@ export async function BrowseView(type, onCard) {
       const items = (data.results || []).filter((x) => x.poster_path);
       maxPage = data.total_pages || 1;
       if (page === 1) grid.innerHTML = '';
-      items.forEach((item) => grid.appendChild(makeCard(item, type, onCard)));
+      items.forEach((item) =>
+        grid.appendChild(Card({ item, type, onClick: onCard }))
+      );
       loadBtn.style.display = page < maxPage ? 'block' : 'none';
       loadBtn.textContent = 'Load More';
       loadBtn.disabled = false;

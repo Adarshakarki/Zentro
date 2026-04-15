@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 300;
+  z-index: var(--z-nav);
   height: 60px;
   display: flex;
   align-items: center;
@@ -61,18 +61,18 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   overflow: hidden;
-  width: 360px;
+  width: 400px;
   transition:
     border-color var(--ease),
     box-shadow var(--ease),
     background var(--ease);
 }
 .search-form:focus-within {
-  background: var(--surface2);
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(22, 255, 0, 0.1);
 }

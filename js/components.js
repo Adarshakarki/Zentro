@@ -27,14 +27,25 @@ export function Empty(title = 'Nothing here', sub = '') {
 
 export function Card({ item, type, onClick, showType = false }) {
   const title = item.title || item.name;
-  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const year = (
+    item.release_date || item.first_air_date || item.added
+      ? new Date(item.added).getFullYear().toString()
+      : ''
+  ).slice(0, 4);
   const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
   const poster = img(item.poster_path, 'w342');
   const mtype = type || item.media_type || 'movie';
-  const pKey = mtype === 'movie' ? `movie_${item.id}` : `tv_${item.id}_s1_e1`;
+  const pKey = progress.getKey(
+    item.id,
+    mtype,
+    item.season_number,
+    item.episode_number
+  );
   const prog = progress.get(pKey);
 
   const card = mk('div', 'card');
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `View details for ${title}`);
   card.innerHTML = `
     <div class="card-thumb">
       ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
@@ -64,13 +75,25 @@ export function Row({
   type,
   onCard,
   showType = false,
+  badge = '',
 }) {
   const sec = mk('div', 'row-section');
-  sec.innerHTML = `
-    <div class="row-head">
-      <h2 class="row-title">${label}</h2>
-      ${sublabel ? `<span class="row-sub">${sublabel}</span>` : ''}
-    </div>`;
+  const head = mk('div', 'row-head');
+  head.innerHTML = `
+    <h2 class="row-title">${label}</h2>
+    ${sublabel ? `<span class="row-sub">${sublabel}</span>` : ''}`;
+
+  if (badge) {
+    head.appendChild(
+      mk(
+        'span',
+        `row-type-badge ${badge}`,
+        badge === 'movie' ? 'Movies' : 'Series'
+      )
+    );
+  }
+  sec.appendChild(head);
+
   const track = mk('div', 'row-track');
   const scroll = mk('div', 'row-scroller');
   items.forEach((i) =>

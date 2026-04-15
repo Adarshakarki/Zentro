@@ -156,7 +156,12 @@ export async function DetailView(item, type, onBack, onCard) {
             const sd = await api.season(item.id, n);
             epGrid.innerHTML = '';
             (sd.episodes || []).forEach((ep) => {
-              const epKey = `tv_${item.id}_s${n}_e${ep.episode_number}`;
+              const epKey = progress.getKey(
+                item.id,
+                'tv',
+                n,
+                ep.episode_number
+              );
               const prog = progress.get(epKey);
               const thumb = ep.still_path
                 ? `<img src="${img(ep.still_path, 'w300')}" loading="lazy">`
@@ -182,9 +187,13 @@ export async function DetailView(item, type, onBack, onCard) {
                   ${overviewTxt ? `<div class="ep-overview">${overviewTxt}</div>` : ''}
                   ${prog ? `<span class="ep-time">${progress.label(epKey) || ''}</span>` : ''}
                 </div>`;
-              card.addEventListener('click', () =>
-                openEpisodePlayer(item.id, n, ep.episode_number)
-              );
+              card.addEventListener('click', () => {
+                history.add(item, type, {
+                  season_number: n,
+                  episode_number: ep.episode_number,
+                });
+                openEpisodePlayer(item.id, n, ep.episode_number);
+              });
               epGrid.appendChild(card);
             });
           } catch {

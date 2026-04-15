@@ -1,20 +1,8 @@
 import { api } from '../api.js';
-import { img, TMDB } from '../config.js';
-import { mk, Empty } from '../components.js';
+import { img } from '../config.js';
+import { mk, Empty, Card, Row } from '../components.js';
 import { icon } from '../icons.js';
-
-async function fetchLogo(type, id) {
-  try {
-    const u = new URL(`${TMDB.base}/${type}/${id}/images`);
-    u.searchParams.set('api_key', TMDB.key);
-    const d = await fetch(u).then((r) => r.json());
-    const en =
-      (d.logos || []).find((l) => l.iso_639_1 === 'en') || (d.logos || [])[0];
-    return en ? img(en.file_path, 'w500') : null;
-  } catch {
-    return null;
-  }
-}
+import { history, progress } from '../storage.js';
 
 function Hero(items, logos, onCard) {
   let idx = 0,
@@ -127,9 +115,12 @@ function ToggleRow({ label, movieItems, tvItems, onCard }) {
 
   function renderCards(items, type) {
     track.innerHTML = '';
-    items.forEach((item) => track.appendChild(makeCard(item, type, onCard)));
+    items.forEach((item) =>
+      track.appendChild(Card({ item, type, onClick: onCard }))
+    );
   }
 
+  // Toggle between Movie and Series lists
   btnM.addEventListener('click', () => {
     btnM.classList.add('active');
     btnS.classList.remove('active');
@@ -143,51 +134,6 @@ function ToggleRow({ label, movieItems, tvItems, onCard }) {
 
   renderCards(movieItems, 'movie');
   return sec;
-}
-
-function PlainRow({ label, items, type, badge, onCard }) {
-  const sec = mk('div', 'row-section');
-  const head = mk('div', 'row-head');
-  head.appendChild(mk('span', 'row-title', label));
-  if (badge)
-    head.appendChild(
-      mk(
-        'span',
-        `row-type-badge ${badge}`,
-        badge === 'movie' ? 'Movies' : 'Series'
-      )
-    );
-  sec.appendChild(head);
-  const scroll = mk('div', 'row-scroller');
-  const track = mk('div', 'row-track');
-  items.forEach((item) =>
-    track.appendChild(
-      makeCard(item, type || item.media_type || 'movie', onCard)
-    )
-  );
-  scroll.appendChild(track);
-  sec.appendChild(scroll);
-  return sec;
-}
-
-function makeCard(item, type, onCard) {
-  const poster = img(item.poster_path, 'w342');
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
-  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-  const title = item.title || item.name;
-  const card = mk('div', 'card');
-  card.innerHTML = `
-    <div class="card-thumb">
-      ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
-      <div class="card-overlay"><div class="card-play-icon">${icon('play', 20, { fill: '#000', stroke: 'none' })}</div></div>
-      ${rating ? `<div class="card-rating">★ ${rating}</div>` : ''}
-    </div>
-    <div class="card-body">
-      <div class="card-title">${title}</div>
-      ${year ? `<div class="card-foot"><span class="card-year">${year}</span></div>` : ''}
-    </div>`;
-  card.addEventListener('click', () => onCard(item, type));
-  return card;
 }
 
 export async function HomeView(onCard) {
@@ -234,11 +180,34 @@ export async function HomeView(onCard) {
       await Promise.all(
         heroItems.map(async (item) => {
           const t = item.media_type === 'tv' ? 'tv' : 'movie';
-          const u = await fetchLogo(t, item.id);
+          const u = await api.logo(t, item.id);
           if (u) logos[item.id] = u;
         })
       );
       root.appendChild(Hero(heroItems, logos, onCard));
+    }
+
+    // Generate Continue Watching Section
+    const hist = history.get().slice(0, 15);
+    const continuing = hist.filter((item) => {
+      const pKey = progress.getKey(
+        item.id,
+        item.type,
+        item.season_number,
+        item.episode_number
+      );
+      const p = progress.get(pKey);
+      return p && p.p > 1 && p.p < 95; // Only show items between 1% and 95%
+    });
+
+    if (continuing.length > 0) {
+      const resumeItems = continuing.map((h) => ({
+        ...h,
+        poster_path: h.poster,
+      }));
+      root.appendChild(
+        Row({ label: 'Continue Watching', items: resumeItems, onCard })
+      );
     }
 
     root.appendChild(
@@ -258,57 +227,57 @@ export async function HomeView(onCard) {
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'Netflix',
         items: netflix.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'HBO / Max',
         items: hbo.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'Prime Video',
         items: prime.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'Apple TV+',
         items: apple.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'Disney+',
         items: disney.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
     root.appendChild(
-      PlainRow({
+      Row({
         label: 'Anime',
         items: anime.slice(0, 20),
         type: 'tv',
         badge: 'series',
-        onCard,
+        onCard: onCard,
       })
     );
   } catch (e) {

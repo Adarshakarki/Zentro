@@ -11,7 +11,8 @@
 }
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+  border-color: var(--border2);
+  box-shadow: var(--shadow-lg);
 }
 .card:hover .card-overlay {
   opacity: 1;
@@ -78,13 +79,14 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(10, 10, 10, 0.75);
   color: var(--accent);
   font-size: 10px;
   font-weight: 700;
   padding: 3px 7px;
   border-radius: 5px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 .card-type {
   position: absolute;
@@ -112,6 +114,7 @@
 .card-progress-fill {
   height: 100%;
   background: var(--accent);
+  transition: width 0.3s ease;
 }
 
 .card-body {
@@ -128,8 +131,6 @@
   line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .card-foot {
   display: flex;

@@ -20,6 +20,9 @@
   opacity: 1;
   z-index: 1;
 }
+.hero-slide.active .hero-bg {
+  transform: scale(1.05);
+}
 .hero-slide.prev {
   opacity: 0;
   z-index: 0;
@@ -31,6 +34,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 10s linear;
 }
 .hero-overlay {
   position: absolute;

@@ -3,19 +3,19 @@ const K = {
   watchlist: 'cl_watchlist',
   progress: 'cl_progress',
 };
-const load = (k) => {
+const load = (k, def = []) => {
   try {
-    return JSON.parse(localStorage.getItem(k) || '[]');
+    return JSON.parse(localStorage.getItem(k)) || def;
   } catch {
-    return [];
+    return def;
   }
 };
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 
 export const history = {
-  add(item, type) {
+  add(item, type, meta = {}) {
     const title = item.title || item.name;
-    if (!title || !item.id) return; /* skip entries with no title */
+    if (!title || !item.id) return;
     let h = load(K.history).filter(
       (x) => !(x.id === item.id && x.type === type)
     );
@@ -25,13 +25,11 @@ export const history = {
       title,
       poster: item.poster_path,
       added: Date.now(),
+      ...meta,
     });
     save(K.history, h.slice(0, 100));
   },
-  get: () =>
-    load(K.history).filter(
-      (x) => x.title && x.id
-    ) /* strip any corrupt entries */,
+  get: () => load(K.history).filter((x) => x.title && x.id),
   remove: (id, t) =>
     save(
       K.history,
@@ -64,13 +62,17 @@ export const watchlist = {
 };
 
 export const progress = {
+  getKey(id, type, s, e) {
+    if (type === 'movie') return `movie_${id}`;
+    return `tv_${id}_s${s || 1}_e${e || 1}`;
+  },
   set(key, { t, d, p }) {
-    const all = JSON.parse(localStorage.getItem(K.progress) || '{}');
+    const all = load(K.progress, {});
     all[key] = { t, d, p };
-    localStorage.setItem(K.progress, JSON.stringify(all));
+    save(K.progress, all);
   },
   get(key) {
-    return JSON.parse(localStorage.getItem(K.progress) || '{}')[key] || null;
+    return load(K.progress, {})[key] || null;
   },
   label(key) {
     const s = this.get(key);
