@@ -28,10 +28,11 @@ export function Empty(title = 'Nothing here', sub = '') {
 export function Card({ item, type, onClick, showType = false }) {
   const title = item.title || item.name;
   const year = (
-    item.release_date || item.first_air_date || item.added
-      ? new Date(item.added).getFullYear().toString()
-      : ''
+    item.release_date ||
+    item.first_air_date ||
+    (item.added ? new Date(item.added).getFullYear().toString() : '')
   ).slice(0, 4);
+
   const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
   const poster = img(item.poster_path, 'w342');
   const mtype = type || item.media_type || 'movie';
