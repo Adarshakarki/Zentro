@@ -36,7 +36,7 @@ async function checkStatus(url) {
   try {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), 5000);
-    // mode: no-cors allows us to verify connectivity without strict CORS headers
+    // connectivity probe: no-cors mode ignores strict headers to check stream availability
     await fetch(url, { mode: 'no-cors', signal: ctrl.signal });
     clearTimeout(id);
     return true;
@@ -62,15 +62,13 @@ async function loadData() {
 
   const proxyLogo = (url) =>
     url
-      ? `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=200&fit=contain&output=webp`
+      ? `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=160&fit=contain&output=webp`
       : null;
 
   const logoMap = {};
   for (const l of logos) {
     if (!l.channel || !l.url) continue;
-
     const tags = l.tags || [];
-    // Prefer light/horizontal logos for high-contrast visibility
     const score =
       (tags.includes('light') || tags.includes('white') ? 10 : 0) +
       (tags.includes('horizontal') ? 5 : 0) +
@@ -129,7 +127,7 @@ export async function LiveView(onBack) {
       'live-heading',
       `
     <h1 class="live-title">Live TV</h1>
-    <p class="live-sub">Click any channel to watch fullscreen · <span class="live-legend"><span class="dot-online">●</span> Online <span class="dot-offline">●</span> Offline</span></p>`
+    <p class="live-sub">Click any channel to watch fullscreen · <span class="live-legend"><span class="dot-online">${icon('circle', 8, { fill: 'currentColor' })}</span> Online <span class="dot-offline">${icon('circle', 8, { fill: 'currentColor' })}</span> Offline</span></p>`
     )
   );
 
@@ -154,7 +152,7 @@ export async function LiveView(onBack) {
     }
 
     const grid = mk('div', 'ch-grid');
-    channels.slice(0, 100).forEach((ch) => {
+    channels.slice(0, 100).forEach((ch, index) => {
       const card = mk('div', 'ch-card');
       card.innerHTML = `
         <div class="ch-thumb">
@@ -166,19 +164,21 @@ export async function LiveView(onBack) {
         </div>
         <div class="ch-name">${ch.name}</div>
         ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}
-        <span class="ch-status checking">●</span>`;
+        <span class="ch-status checking">${icon('circle', 8, { fill: 'currentColor' })}</span>`;
 
       card.addEventListener('click', () => openLivePlayer(ch.stream, ch.name));
       grid.appendChild(card);
 
-      // Perform async check
-      checkStatus(ch.stream).then((isUp) => {
+      // Staggered availability check
+      setTimeout(() => {
+        checkStatus(ch.stream).then((isUp) => {
         const dot = card.querySelector('.ch-status');
         if (dot) {
           dot.className = `ch-status ${isUp ? 'online' : 'offline'}`;
           dot.title = isUp ? 'Online' : 'Offline / Restricted';
         }
       });
+      }, index * 100); 
     });
     area.appendChild(grid);
   }

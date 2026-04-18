@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { mk, Card, Loader, Empty } from '../components.js';
+import { icon } from '../icons.js';
 
 export async function SearchView(query, onCard) {
   const root = mk('div', 'search-view');
@@ -16,7 +17,7 @@ export async function SearchView(query, onCard) {
     root.querySelector('.state-loader')?.remove();
 
     if (!results.length) {
-      root.appendChild(Empty('🔍', 'No results', 'Try a different keyword'));
+      root.appendChild(Empty('No results', 'Try a different keyword', 'search'));
       return root;
     }
 
@@ -31,7 +32,7 @@ export async function SearchView(query, onCard) {
     root.appendChild(grid);
   } catch (e) {
     root.querySelector('.state-loader')?.remove();
-    root.appendChild(Empty('⚠️', 'Search failed', e.message));
+    root.appendChild(Empty('Search failed', e.message, 'alertCircle'));
   }
 
   return root;

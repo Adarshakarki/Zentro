@@ -4,14 +4,15 @@ import { SearchView } from './views/search.js';
 import { LibraryView } from './views/library.js';
 import { LiveView } from './views/live.js';
 import { Empty } from './components.js';
+import { icon } from './icons.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('mainNav');
 
-/* scroll-hide nav */
+/* Navigation Scroll Behavior */
 let lastY = 0;
 let ticking = false;
-const THRESHOLD = 80; /* px before hide kicks in */
+const THRESHOLD = 80;
 
 window.addEventListener(
   'scroll',
@@ -36,7 +37,7 @@ window.addEventListener(
   { passive: true }
 );
 
-/* nav overlay (home hero) */
+/* View State Management */
 const NAV_PAGES = new Set(['home', 'library', 'search', 'browse']);
 function setNav(page) {
   const show = NAV_PAGES.has(page);
@@ -64,7 +65,7 @@ function mount(el) {
   window.scrollTo(0, 0);
 }
 
-/* browse dropdown */
+/* Browse Dropdown */
 const browseWrap = document.getElementById('browseWrap');
 const browseBtn = document.getElementById('navBrowse');
 
@@ -102,7 +103,7 @@ document.querySelectorAll('.browse-item').forEach((btn) => {
   });
 });
 
-/* router */
+/* View Router */
 async function go(page, payload = {}) {
   setNav(page);
   try {
@@ -163,7 +164,7 @@ async function go(page, payload = {}) {
   }
 }
 
-/* hash routing */
+/* Deep Linking */
 function handleHash() {
   const hash = window.location.hash.replace('#/', '');
   if (!hash || hash === '/') {
@@ -192,7 +193,7 @@ function handleHash() {
 
 window.addEventListener('popstate', handleHash);
 
-/* nav buttons */
+/* Nav Event Listeners */
 document.getElementById('navHome').addEventListener('click', () => {
   window.location.hash = '#/';
   go('home');
@@ -206,23 +207,61 @@ document.querySelector('.logo').addEventListener('click', (e) => {
   go('home');
 });
 
-/* search */
+/* Search Controller */
 let debounce;
-document.getElementById('searchInput').addEventListener('input', (e) => {
+const searchInput = document.getElementById('searchInput');
+const searchForm = document.getElementById('searchForm');
+const searchClear = document.getElementById('searchClear');
+const searchIcon = document.getElementById('searchIcon');
+
+document.querySelectorAll('[data-icon]').forEach(el => {
+  const name = el.dataset.icon;
+  const size = +el.dataset.size || 15;
+  el.innerHTML = icon(name, size);
+});
+
+if (searchClear) searchClear.innerHTML = icon('x', 14);
+if (searchIcon) searchIcon.innerHTML = icon('search', 15);
+
+// Focus handling for mobile search expansion
+searchForm.addEventListener('click', () => {
+  if (window.innerWidth <= 768) searchInput.focus();
+});
+
+searchInput.addEventListener('focus', () => {
+  nav.classList.add('nav-searching');
+});
+
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => {
+    if (!searchInput.value.trim()) nav.classList.remove('nav-searching');
+  }, 200); // Delay to ensure clear button click registers
+});
+
+searchClear?.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  searchInput.focus();
+  if (window.location.hash.includes('search')) {
+    go('home');
+  }
+});
+
+searchInput.addEventListener('input', (e) => {
   clearTimeout(debounce);
   const q = e.target.value.trim();
+  searchClear?.classList.toggle('visible', !!q);
   if (!q) {
-    // If search is cleared, revert to home
-    if (window.location.hash.includes('search')) {
-      window.history.back();
-    }
+    if (window.location.hash.includes('search')) go('home');
     return;
   }
   debounce = setTimeout(() => go('search', { query: q }), 400);
 });
-document.getElementById('searchForm').addEventListener('submit', (e) => {
+searchForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const q = document.getElementById('searchInput').value.trim();
+  const q = searchInput.value.trim();
   if (q) go('search', { query: q });
 });
 

@@ -21,7 +21,7 @@
     'adsterratechnology.com',
   ];
 
-  /* never block our own requests */
+  // Explicitly whitelisted domains
   const WHITELIST = [
     'vidking.net',
     'themoviedb.org',
@@ -37,7 +37,7 @@
     return BLACKLIST.some((d) => url.includes(d));
   };
 
-  // Intercept and block popup windows
+  // Intercept popup windows
   const _open = window.open;
   window.open = function (url, ...rest) {
     if (shouldBlock(url)) {
@@ -47,7 +47,7 @@
     return _open.call(window, url, ...rest);
   };
 
-  // Intercept and block unauthorized Fetch requests
+  // Intercept Fetch requests
   const _fetch = window.fetch;
   window.fetch = function (...args) {
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
@@ -58,7 +58,7 @@
     return _fetch.apply(window, args);
   };
 
-  // Intercept and block unauthorized XHR requests
+  // Intercept XHR requests
   const _xhrOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
     this._blocked = shouldBlock(url);
@@ -71,13 +71,12 @@
     return _xhrSend.apply(this, args);
   };
 
-  // Remove injected ad overlays from the DOM
+  // Clean ad-related DOM injections
   const clean = () => {
     if (!document.body) return;
     document.body.childNodes.forEach((node) => {
       if (node.nodeType !== 1) return;
 
-      // Safeguard core application elements
       if (
         node.id === 'app' ||
         node.id === 'mainNav' ||
@@ -85,13 +84,14 @@
       )
         return;
 
-      // Efficiently check for high z-index overlays without excessive layout thrashing
+      // Remove high z-index overlays
       if (
         (node.style && node.style.zIndex > 1000) ||
         node.style.position === 'fixed'
       ) {
         const computedStyle = window.getComputedStyle(node);
-        if (computed.zIndex > 1000 || computedStyle.position === '2147483647') {
+        const z = parseInt(computedStyle.zIndex);
+        if (z > 1000 || computedStyle.zIndex === '2147483647') {
           node.remove();
           return;
         }
@@ -102,7 +102,7 @@
         return;
       }
 
-      // Remove invisible full-screen click-jacking overlays
+      // Remove invisible click-jacking overlays
       const rect = node.getBoundingClientRect();
       if (
         rect.width > window.innerWidth * 0.9 &&

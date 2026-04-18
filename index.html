@@ -20,10 +20,9 @@
     </div>
 
     <form class="search-form" id="searchForm">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
+      <div id="searchIcon" class="search-icon"></div>
       <input type="text" id="searchInput" placeholder="Search movies &amp; shows…" autocomplete="off">
+      <div id="searchClear" class="search-clear"></div>
     </form>
 
     <div class="nav-right">
@@ -32,24 +31,24 @@
       <div class="nav-browse-wrap" id="browseWrap">
         <button class="nav-link nav-browse-btn" id="navBrowse">
           Browse
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          <span data-icon="chevronDown" data-size="11"></span>
         </button>
         <div class="browse-dropdown" id="browseDropdown">
           <button class="browse-item" data-go="movies">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m10 0h4M3 16h4m10 0h4"/></svg>
+            <span data-icon="film" data-size="15"></span>
             Movies
           </button>
           <button class="browse-item" data-go="series">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10"/><rect width="20" height="14" x="2" y="3" rx="2"/></svg>
+            <span data-icon="tv" data-size="15"></span>
             Series
           </button>
           <button class="browse-item" data-go="live">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M20.07 4a10 10 0 0 1 0 16M3.93 20a10 10 0 0 1 0-16"/></svg>
+            <span data-icon="radio" data-size="15"></span>
             Live TV
           </button>
         </div>
       </div>
-      <a class="nav-link nav-vidking" href="https://www.vidking.net/" target="_blank" rel="noopener">API ↗</a>
+      <a class="nav-link nav-vidking" href="https://www.vidking.net/" target="_blank" rel="noopener">API <span data-icon="externalLink" data-size="10"></span></a>
     </div>
   </nav>
 

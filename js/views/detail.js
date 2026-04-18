@@ -53,19 +53,19 @@ export async function DetailView(item, type, onBack, onCard) {
 
     root.innerHTML = '';
 
-    /* back */
+    /* Back Button */
     const back = mk('button', 'back-btn detail-back');
     back.innerHTML = icon('chevronLeft', 20);
     back.addEventListener('click', onBack);
     root.appendChild(back);
 
-    /* hero */
+    /* Hero Section */
     const hero = mk('div', 'detail-hero');
     if (backdrop) hero.style.backgroundImage = `url(${backdrop})`;
     root.appendChild(hero);
 
     const content = mk('div', 'detail-content');
-    hero.innerHTML = `<div class="detail-hero-overlay"></div>`;
+    hero.innerHTML = '<div class="detail-hero-overlay"></div>';
     hero.appendChild(content);
 
     if (logoUrl) {
@@ -81,7 +81,7 @@ export async function DetailView(item, type, onBack, onCard) {
     }
 
     const metaParts = [
-      rating ? `<span class="dc-chip gold">★ ${rating}</span>` : '',
+      rating ? `<span class="dc-chip gold">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>` : '',
       year ? `<span class="dc-chip">${year}</span>` : '',
       runtime ? `<span class="dc-chip">${runtime}</span>` : '',
       genres ? `<span class="dc-chip">${genres}</span>` : '',
@@ -106,7 +106,7 @@ export async function DetailView(item, type, onBack, onCard) {
     wlBtn.innerHTML = `${icon('bookmark', 15, { fill: inWl ? 'currentColor' : 'none' })} ${inWl ? 'Saved' : 'Watchlist'}`;
     acts.appendChild(wlBtn);
 
-    /* download via vidvault.ru — movies only (TV has per-episode download links) */
+    // Movie download support
     if (type === 'movie') {
       const dlBtn = mk('a', 'action-btn ghost action-dl');
       dlBtn.href = `https://vidvault.ru/movie/${item.id}`;
@@ -118,11 +118,10 @@ export async function DetailView(item, type, onBack, onCard) {
 
     content.appendChild(acts);
 
-    /* movie player */
     if (type === 'movie')
       playBtn.addEventListener('click', () => openMoviePlayer(item));
 
-    /* tv */
+    /* TV Series Logic */
     if (type === 'tv') {
       const validSeasons = (d.seasons || []).filter((s) => s.season_number > 0);
       playBtn.addEventListener('click', () => openEpisodePlayer(item.id, 1, 1));
@@ -205,13 +204,13 @@ export async function DetailView(item, type, onBack, onCard) {
       }
     }
 
-    /* watchlist */
+    /* Watchlist Controller */
     wlBtn.addEventListener('click', () => {
       const added = watchlist.toggle(item, type);
       wlBtn.innerHTML = `${icon('bookmark', 15, { fill: added ? 'currentColor' : 'none' })} ${added ? 'Saved' : 'Watchlist'}`;
     });
 
-    /* cast with Wikipedia photos */
+    /* Cast Section */
     if (cast.length) {
       const castSection = mk('div', 'cast-section');
       castSection.appendChild(mk('h3', 'section-heading', 'Cast'));

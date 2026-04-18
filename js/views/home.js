@@ -24,7 +24,7 @@ function Hero(items, logos, onCard) {
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-badges">
-          ${rating ? `<span class="badge-rating">★ ${rating}</span>` : ''}
+          ${rating ? `<span class="badge-rating">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>` : ''}
           ${year ? `<span class="badge-plain">${year}</span>` : ''}
           <span class="badge-plain">${type === 'tv' ? 'Series' : 'Film'}</span>
         </div>
@@ -187,7 +187,6 @@ export async function HomeView(onCard) {
       root.appendChild(Hero(heroItems, logos, onCard));
     }
 
-    // Generate Continue Watching Section
     const hist = history.get().slice(0, 15);
     const continuing = hist.filter((item) => {
       const pKey = progress.getKey(

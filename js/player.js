@@ -5,7 +5,6 @@ import { progress, history } from './storage.js';
 
 function trackProgress(key) {
   const handler = (e) => {
-    // Only accept messages from the trusted player domain
     if (!e.origin.includes('vidking.net')) return;
 
     if (typeof e.data !== 'string') return;
@@ -103,7 +102,7 @@ export function openLivePlayer(url, title) {
   const info = mk(
     'div',
     'live-fs-info',
-    `<span class="live-fs-badge">● LIVE</span><span class="live-fs-title">${title || ''}</span>`
+    `<span class="live-fs-badge">${icon('circle', 8, { fill: 'currentColor' })} LIVE</span><span class="live-fs-title">${title || ''}</span>`
   );
 
   video.controls = true;

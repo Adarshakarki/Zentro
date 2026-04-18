@@ -17,11 +17,11 @@ export function Loader(msg = '') {
   );
 }
 
-export function Empty(title = 'Nothing here', sub = '') {
+export function Empty(title = 'Nothing here', sub = '', iconName = '') {
   return mk(
     'div',
     'state-empty',
-    `<h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}`
+    `${iconName ? `<div class="state-icon">${icon(iconName, 42)}</div>` : ''}<h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}`
   );
 }
 
@@ -53,7 +53,7 @@ export function Card({ item, type, onClick, showType = false }) {
       <div class="card-overlay">
         <div class="card-play-icon">${icon('play', 20, { fill: '#000', stroke: 'none' })}</div>
       </div>
-      ${rating ? `<div class="card-rating">★ ${rating}</div>` : ''}
+      ${rating ? `<div class="card-rating">${icon('star', 11, { fill: 'currentColor' })} <span>${rating}</span></div>` : ''}
       ${showType ? `<div class="card-type">${mtype === 'tv' ? 'Series' : 'Film'}</div>` : ''}
       ${prog ? `<div class="card-progress-bar"><div class="card-progress-fill" style="width:${prog.p}%"></div></div>` : ''}
     </div>
