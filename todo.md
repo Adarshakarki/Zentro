@@ -1,5 +1,0 @@
-- fix ui/layout of items like homepage
-- fix list of episodes for series
-- fix live tv
-- use lucide icons instead of these hardocoded ones
-- clean code and comments, remove emojis
