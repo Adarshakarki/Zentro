@@ -216,6 +216,7 @@
 .row-scroller {
   overflow-x: auto;
   padding: 4px 28px 12px;
+  cursor: pointer;
 }
 .row-scroller::-webkit-scrollbar {
   height: 3px;

@@ -60,4 +60,5 @@ img {
 ::-webkit-scrollbar-thumb {
   background: var(--border2);
   border-radius: 99px;
+  cursor: pointer;
 }

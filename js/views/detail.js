@@ -116,6 +116,17 @@ export async function DetailView(item, type, onBack, onCard) {
       acts.appendChild(dlBtn);
     }
 
+    /* IMDb Button */
+    const imdbId = d.imdb_id || d.external_ids?.imdb_id;
+    if (imdbId) {
+      const imdbBtn = mk('a', 'action-btn ghost');
+      imdbBtn.href = `https://www.imdb.com/title/${imdbId}/`;
+      imdbBtn.target = '_blank';
+      imdbBtn.rel = 'noopener';
+      imdbBtn.innerHTML = `${icon('externalLink', 15)} IMDb`;
+      acts.appendChild(imdbBtn);
+    }
+
     content.appendChild(acts);
 
     if (type === 'movie')
