@@ -113,44 +113,40 @@ function ToggleRow({ label, movieItems, tvItems, onCard }) {
   scroll.appendChild(track);
   sec.appendChild(scroll);
 
-  let currentActiveType = 'movie'; // Track the currently active type
-  let scrollPositions = { movie: 0, tv: 0 }; // Store scroll positions for each type
+  let currentActiveType = 'movie';
+  let scrollPositions = { movie: 0, tv: 0 };
 
   function renderCards(items, type) {
     track.innerHTML = '';
     items.forEach((item) =>
       track.appendChild(Card({ item, type, onClick: onCard }))
     );
-    // Restore scroll position after rendering
     scroll.scrollLeft = scrollPositions[type];
   }
 
-  // Add scroll event listener to update scroll position for the active type
   scroll.addEventListener('scroll', () => {
     scrollPositions[currentActiveType] = scroll.scrollLeft;
   });
 
-  // Toggle between Movie and Series lists
   btnM.addEventListener('click', () => {
-    if (currentActiveType === 'movie') return; // Already active
+    if (currentActiveType === 'movie') return;
 
-    scrollPositions[currentActiveType] = scroll.scrollLeft; // Save current scroll position
+    scrollPositions[currentActiveType] = scroll.scrollLeft;
     currentActiveType = 'movie';
     btnM.classList.add('active');
     btnS.classList.remove('active');
     renderCards(movieItems, 'movie');
   });
   btnS.addEventListener('click', () => {
-    if (currentActiveType === 'tv') return; // Already active
+    if (currentActiveType === 'tv') return;
 
-    scrollPositions[currentActiveType] = scroll.scrollLeft; // Save current scroll position
+    scrollPositions[currentActiveType] = scroll.scrollLeft;
     currentActiveType = 'tv';
     btnS.classList.add('active');
     btnM.classList.remove('active');
     renderCards(tvItems, 'tv');
   });
 
-  // Initial render
   renderCards(movieItems, 'movie');
   return sec;
 }

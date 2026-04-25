@@ -9,7 +9,6 @@ import { icon } from './icons.js';
 const app = document.getElementById('app');
 const nav = document.getElementById('mainNav');
 
-/* Navigation Scroll Behavior */
 let lastY = 0;
 let ticking = false;
 const THRESHOLD = 80;
@@ -37,7 +36,6 @@ window.addEventListener(
   { passive: true }
 );
 
-/* View State Management */
 const NAV_PAGES = new Set(['home', 'library', 'search', 'browse']);
 function setNav(page) {
   const show = NAV_PAGES.has(page);
@@ -65,7 +63,6 @@ function mount(el) {
   window.scrollTo(0, 0);
 }
 
-/* Browse Dropdown */
 const browseWrap = document.getElementById('browseWrap');
 const browseBtn = document.getElementById('navBrowse');
 
@@ -103,7 +100,6 @@ document.querySelectorAll('.browse-item').forEach((btn) => {
   });
 });
 
-/* View Router */
 async function go(page, payload = {}) {
   setNav(page);
   try {
@@ -164,7 +160,6 @@ async function go(page, payload = {}) {
   }
 }
 
-/* Deep Linking */
 function handleHash() {
   const hash = window.location.hash.replace('#/', '');
   if (!hash || hash === '/') {
@@ -193,7 +188,6 @@ function handleHash() {
 
 window.addEventListener('popstate', handleHash);
 
-/* Nav Event Listeners */
 document.getElementById('navHome').addEventListener('click', () => {
   window.location.hash = '#/';
   go('home');
@@ -207,14 +201,13 @@ document.querySelector('.logo').addEventListener('click', (e) => {
   go('home');
 });
 
-/* Search Controller */
 let debounce;
 const searchInput = document.getElementById('searchInput');
 const searchForm = document.getElementById('searchForm');
 const searchClear = document.getElementById('searchClear');
 const searchIcon = document.getElementById('searchIcon');
 
-document.querySelectorAll('[data-icon]').forEach(el => {
+document.querySelectorAll('[data-icon]').forEach((el) => {
   const name = el.dataset.icon;
   const size = +el.dataset.size || 15;
   el.innerHTML = icon(name, size);

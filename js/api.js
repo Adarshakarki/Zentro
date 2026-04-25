@@ -7,12 +7,10 @@ async function get(path, params = {}) {
 
   let u;
   if (isProxy) {
-    // Request via Cloudflare Worker proxy
     u = new URL(
       `${TMDB.base}?path=${encodeURIComponent(path.replace(/^\//, ''))}`
     );
   } else {
-    // Direct request to TMDB (local development)
     if (!TMDB.key) {
       console.error('[zentro] Missing TMDB API Key.');
       throw new Error('Missing API Key');

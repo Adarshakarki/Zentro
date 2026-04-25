@@ -17,7 +17,9 @@ export async function SearchView(query, onCard) {
     root.querySelector('.state-loader')?.remove();
 
     if (!results.length) {
-      root.appendChild(Empty('No results', 'Try a different keyword', 'search'));
+      root.appendChild(
+        Empty('No results', 'Try a different keyword', 'search')
+      );
       return root;
     }
 

@@ -172,13 +172,13 @@ export async function LiveView(onBack) {
       // Staggered availability check
       setTimeout(() => {
         checkStatus(ch.stream).then((isUp) => {
-        const dot = card.querySelector('.ch-status');
-        if (dot) {
-          dot.className = `ch-status ${isUp ? 'online' : 'offline'}`;
-          dot.title = isUp ? 'Online' : 'Offline / Restricted';
-        }
-      });
-      }, index * 100); 
+          const dot = card.querySelector('.ch-status');
+          if (dot) {
+            dot.className = `ch-status ${isUp ? 'online' : 'offline'}`;
+            dot.title = isUp ? 'Online' : 'Offline / Restricted';
+          }
+        });
+      }, index * 100);
     });
     area.appendChild(grid);
   }

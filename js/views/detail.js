@@ -11,7 +11,6 @@ function getLogoUrl(images) {
   return en ? img(en.file_path, 'w500') : null;
 }
 
-/* Fetch actor profile photo from Wikipedia */
 async function wikiPhoto(name) {
   try {
     const u = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=120&origin=*`;
@@ -53,13 +52,11 @@ export async function DetailView(item, type, onBack, onCard) {
 
     root.innerHTML = '';
 
-    /* Back Button */
     const back = mk('button', 'back-btn detail-back');
     back.innerHTML = icon('chevronLeft', 20);
     back.addEventListener('click', onBack);
     root.appendChild(back);
 
-    /* Hero Section */
     const hero = mk('div', 'detail-hero');
     if (backdrop) hero.style.backgroundImage = `url(${backdrop})`;
     root.appendChild(hero);
@@ -81,7 +78,9 @@ export async function DetailView(item, type, onBack, onCard) {
     }
 
     const metaParts = [
-      rating ? `<span class="dc-chip gold">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>` : '',
+      rating
+        ? `<span class="dc-chip gold">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>`
+        : '',
       year ? `<span class="dc-chip">${year}</span>` : '',
       runtime ? `<span class="dc-chip">${runtime}</span>` : '',
       genres ? `<span class="dc-chip">${genres}</span>` : '',
@@ -116,7 +115,6 @@ export async function DetailView(item, type, onBack, onCard) {
       acts.appendChild(dlBtn);
     }
 
-    /* IMDb Button */
     const imdbId = d.imdb_id || d.external_ids?.imdb_id;
     if (imdbId) {
       const imdbBtn = mk('a', 'action-btn ghost');
@@ -132,7 +130,6 @@ export async function DetailView(item, type, onBack, onCard) {
     if (type === 'movie')
       playBtn.addEventListener('click', () => openMoviePlayer(item));
 
-    /* TV Series Logic */
     if (type === 'tv') {
       const validSeasons = (d.seasons || []).filter((s) => s.season_number > 0);
       playBtn.addEventListener('click', () => openEpisodePlayer(item.id, 1, 1));
@@ -215,13 +212,11 @@ export async function DetailView(item, type, onBack, onCard) {
       }
     }
 
-    /* Watchlist Controller */
     wlBtn.addEventListener('click', () => {
       const added = watchlist.toggle(item, type);
       wlBtn.innerHTML = `${icon('bookmark', 15, { fill: added ? 'currentColor' : 'none' })} ${added ? 'Saved' : 'Watchlist'}`;
     });
 
-    /* Cast Section */
     if (cast.length) {
       const castSection = mk('div', 'cast-section');
       castSection.appendChild(mk('h3', 'section-heading', 'Cast'));
@@ -229,7 +224,6 @@ export async function DetailView(item, type, onBack, onCard) {
       castSection.appendChild(castGrid);
       root.appendChild(castSection);
 
-      /* render placeholders immediately */
       cast.forEach((c) => {
         const card = mk('div', 'cast-card');
         card.dataset.name = c.name;
@@ -248,7 +242,6 @@ export async function DetailView(item, type, onBack, onCard) {
         castGrid.appendChild(card);
       });
 
-      /* enrich with Wikipedia photos where TMDB has no profile */
       cast.forEach(async (c) => {
         if (c.profile_path) return; /* already has photo */
         const wikiUrl = await wikiPhoto(c.name);
@@ -263,7 +256,6 @@ export async function DetailView(item, type, onBack, onCard) {
       });
     }
 
-    /* similar */
     if (similar.length) {
       const sim = mk('div', 'similar-section');
       sim.appendChild(mk('h3', 'section-heading', 'More Like This'));

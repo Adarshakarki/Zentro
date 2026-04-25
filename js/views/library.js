@@ -41,7 +41,6 @@ export function LibraryView(onCard) {
     items.forEach((r) => {
       const poster = r.poster ? img(r.poster, 'w342') : null;
 
-      // Calculate progress data
       const pKey = progress.getKey(
         r.id,
         r.type,
