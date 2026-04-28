@@ -5,6 +5,7 @@ import { LibraryView } from './views/library.js';
 import { LiveView } from './views/live.js';
 import { Empty } from './components.js';
 import { icon } from './icons.js';
+import { openMoviePlayer, openEpisodePlayer } from './player.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('mainNav');
@@ -107,7 +108,14 @@ async function go(page, payload = {}) {
       case 'home':
         mount(
           await HomeView(
-            (item, type) => go('detail', { item, type }),
+            (item, type, playNow) => {
+              if (playNow) {
+                if (type === 'movie') openMoviePlayer(item);
+                else openEpisodePlayer(item.id, 1, 1);
+              } else {
+                go('detail', { item, type });
+              }
+            },
             () => go('live')
           )
         );
@@ -216,7 +224,6 @@ document.querySelectorAll('[data-icon]').forEach((el) => {
 if (searchClear) searchClear.innerHTML = icon('x', 14);
 if (searchIcon) searchIcon.innerHTML = icon('search', 15);
 
-// Focus handling for mobile search expansion
 searchForm.addEventListener('click', () => {
   if (window.innerWidth <= 768) searchInput.focus();
 });
@@ -228,7 +235,7 @@ searchInput.addEventListener('focus', () => {
 searchInput.addEventListener('blur', () => {
   setTimeout(() => {
     if (!searchInput.value.trim()) nav.classList.remove('nav-searching');
-  }, 200); // Delay to ensure clear button click registers
+  }, 200);
 });
 
 searchClear?.addEventListener('click', (e) => {

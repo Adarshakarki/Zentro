@@ -211,7 +211,7 @@ export async function HomeView(onCard) {
         item.episode_number
       );
       const p = progress.get(pKey);
-      return p && p.p > 1 && p.p < 95; // Only show items between 1% and 95%
+      return p && p.p > 1 && p.p < 95;
     });
 
     if (continuing.length > 0) {

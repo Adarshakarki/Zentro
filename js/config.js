@@ -4,8 +4,8 @@ export const TMDB = {
   base:
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
-      ? 'https://api.themoviedb.org/3' /* local dev — direct */
-      : WORKER_URL /* production — CF worker proxy */,
+      ? 'https://api.themoviedb.org/3'
+      : WORKER_URL,
 
   get key() {
     try {

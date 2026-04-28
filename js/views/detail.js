@@ -26,7 +26,6 @@ async function wikiPhoto(name) {
 export async function DetailView(item, type, onBack, onCard) {
   const root = mk('div', 'detail-view');
   root.appendChild(Loader());
-  history.add(item, type);
 
   try {
     const d = await api.detail(type, item.id);
@@ -49,6 +48,8 @@ export async function DetailView(item, type, onBack, onCard) {
     const backdrop = img(d.backdrop_path, 'original');
     const logoUrl = getLogoUrl(d.images);
     const inWl = watchlist.has(item.id, type);
+
+    history.add(d, type);
 
     root.innerHTML = '';
 
@@ -105,7 +106,6 @@ export async function DetailView(item, type, onBack, onCard) {
     wlBtn.innerHTML = `${icon('bookmark', 15, { fill: inWl ? 'currentColor' : 'none' })} ${inWl ? 'Saved' : 'Watchlist'}`;
     acts.appendChild(wlBtn);
 
-    // Movie download support
     if (type === 'movie') {
       const dlBtn = mk('a', 'action-btn ghost action-dl');
       dlBtn.href = `https://vidvault.ru/movie/${item.id}`;
@@ -128,11 +128,11 @@ export async function DetailView(item, type, onBack, onCard) {
     content.appendChild(acts);
 
     if (type === 'movie')
-      playBtn.addEventListener('click', () => openMoviePlayer(item));
+      playBtn.addEventListener('click', () => openMoviePlayer(d));
 
     if (type === 'tv') {
       const validSeasons = (d.seasons || []).filter((s) => s.season_number > 0);
-      playBtn.addEventListener('click', () => openEpisodePlayer(item.id, 1, 1));
+      playBtn.addEventListener('click', () => openEpisodePlayer(d.id, 1, 1));
 
       if (validSeasons.length) {
         const epSection = mk('div', 'detail-episodes');
@@ -213,7 +213,7 @@ export async function DetailView(item, type, onBack, onCard) {
     }
 
     wlBtn.addEventListener('click', () => {
-      const added = watchlist.toggle(item, type);
+      const added = watchlist.toggle(d, type);
       wlBtn.innerHTML = `${icon('bookmark', 15, { fill: added ? 'currentColor' : 'none' })} ${added ? 'Saved' : 'Watchlist'}`;
     });
 
@@ -243,7 +243,7 @@ export async function DetailView(item, type, onBack, onCard) {
       });
 
       cast.forEach(async (c) => {
-        if (c.profile_path) return; /* already has photo */
+        if (c.profile_path) return;
         const wikiUrl = await wikiPhoto(c.name);
         if (!wikiUrl) return;
         const card = castGrid.querySelector(

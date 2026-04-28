@@ -15,10 +15,10 @@ Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidking](https://w
 
 ## Features
 - A unified interface for Movies, Series, and HLS Live TV streams.
-- Integrated Ad-Blocker & Popup Interceptor to neutralize third-party tracking and intrusive redirects.
 - Locally stored Watchlist and History.
 - Good UI
 
+* _Adblocking: Couldn't fix adblocker due to detection and stuff so use an external adblocker until a solution is found_
 ---
 
 ## Screenshots
@@ -43,5 +43,6 @@ Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidking](https://w
 **Note:** Zentro is a frontend interface only. This project does not host, store, or distribute any media files.
 * Playback: Powered by the [Vidking API](https://www.vidking.net/).
 * Downloads: Handled via [Vidvault](https://vidvault.ru/).
+
 
 All content is provided by third-party services. For any DMCA or legal inquiries, please contact the respective API providers directly.

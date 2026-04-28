@@ -36,7 +36,6 @@ async function checkStatus(url) {
   try {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), 5000);
-    // connectivity probe: no-cors mode ignores strict headers to check stream availability
     await fetch(url, { mode: 'no-cors', signal: ctrl.signal });
     clearTimeout(id);
     return true;
@@ -169,7 +168,6 @@ export async function LiveView(onBack) {
       card.addEventListener('click', () => openLivePlayer(ch.stream, ch.name));
       grid.appendChild(card);
 
-      // Staggered availability check
       setTimeout(() => {
         checkStatus(ch.stream).then((isUp) => {
           const dot = card.querySelector('.ch-status');

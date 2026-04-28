@@ -37,21 +37,22 @@ export function openPlayer(src, progressKey) {
   const closeBtn = mk('button', 'player-close', icon('x', 20));
   const iframe = document.createElement('iframe');
 
-  iframe.src = src;
   iframe.setAttribute(
     'allow',
     'autoplay; fullscreen; encrypted-media; picture-in-picture'
   );
+  iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
   iframe.setAttribute('frameborder', '0');
-  iframe.setAttribute(
-    'sandbox',
-    'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock'
-  );
+
+  iframe.src = src;
 
   overlay.append(iframe, closeBtn);
   document.body.appendChild(overlay);
 
   const cleanup = progressKey ? trackProgress(progressKey) : () => {};
+
+  const onBlur = () => setTimeout(() => window.focus(), 0);
+  window.addEventListener('blur', onBlur);
 
   const close = (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -59,6 +60,7 @@ export function openPlayer(src, progressKey) {
     iframe.src = '';
     overlay.remove();
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('blur', onBlur);
   };
 
   overlay._close = close;
