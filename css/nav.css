@@ -10,12 +10,12 @@
   padding: 0 28px;
   background: linear-gradient(
     to bottom,
-    rgba(10, 10, 10, 0.95),
-    rgba(10, 10, 10, 0.8)
+    rgba(10, 10, 10, 0.88) 0%,
+    rgba(10, 10, 10, 0.75) 100%
   );
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(28px);
   transition:
-    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     background var(--ease),
     border-color var(--ease);
@@ -61,22 +61,22 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   overflow: hidden;
   width: 300px;
-  height: 26px;
+  height: 28px;
   transition:
-    border-color var(--ease),
-    box-shadow var(--ease),
-    background var(--ease),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.3s ease;
 }
 .search-form:focus-within {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(22, 255, 0, 0.1);
+  box-shadow: 0 0 0 4px rgba(22, 255, 0, 0.12);
 }
 .search-icon {
   position: absolute;

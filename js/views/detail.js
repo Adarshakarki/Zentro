@@ -106,6 +106,18 @@ export async function DetailView(item, type, onBack, onCard) {
     wlBtn.innerHTML = `${icon('bookmark', 15, { fill: inWl ? 'currentColor' : 'none' })} ${inWl ? 'Saved' : 'Watchlist'}`;
     acts.appendChild(wlBtn);
 
+    const trailer = d.videos?.results?.find(
+      (v) => v.type === 'Trailer' && v.site === 'YouTube'
+    );
+    if (trailer) {
+      const trBtn = mk('a', 'action-btn ghost');
+      trBtn.href = `https://www.youtube.com/watch?v=${trailer.key}`;
+      trBtn.target = '_blank';
+      trBtn.rel = 'noopener';
+      trBtn.innerHTML = `${icon('play', 15)} Trailer`;
+      acts.appendChild(trBtn);
+    }
+
     if (type === 'movie') {
       const dlBtn = mk('a', 'action-btn ghost action-dl');
       dlBtn.href = `https://vidvault.ru/movie/${item.id}`;

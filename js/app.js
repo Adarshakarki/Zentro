@@ -5,7 +5,7 @@ import { LibraryView } from './views/library.js';
 import { LiveView } from './views/live.js';
 import { Empty } from './components.js';
 import { icon } from './icons.js';
-import { openMoviePlayer, openEpisodePlayer } from './player.js';
+import { openMoviePlayer, openEpisodePlayer, closeExistingPlayer } from './player.js';
 
 const app = document.getElementById('app');
 const nav = document.getElementById('mainNav');
@@ -144,6 +144,13 @@ async function go(page, payload = {}) {
         );
         break;
       }
+    
+            case 'watch': {
+        const { type, id, s, e } = payload;
+        if (type === 'movie') openMoviePlayer({ id: +id });
+        else openEpisodePlayer(+id, +s, +e);
+        break;
+      }
 
       case 'search':
         mount(
@@ -169,7 +176,14 @@ async function go(page, payload = {}) {
 }
 
 function handleHash() {
-  const hash = window.location.hash.replace('#/', '');
+  const hash = window.location.hash.replace(/^#\/?/, '');
+
+  const playerOpen = !!document.querySelector('.player-overlay');
+  if (playerOpen && !hash.includes('watch/')) {
+    closeExistingPlayer(true);
+  }
+
+
   if (!hash || hash === '/') {
     go('home');
     return;
@@ -186,6 +200,16 @@ function handleHash() {
   if (parts[0] === 'browse' && parts[1]) {
     go('browse', { type: parts[1] });
     return;
+  }
+  if (parts[0] === 'watch') {
+    if (parts[1] === 'movie' && parts[2]) {
+      go('watch', { type: 'movie', id: parts[2] });
+      return;
+    }
+    if (parts[1] === 'tv' && parts[2] && parts[3] && parts[4]) {
+      go('watch', { type: 'tv', id: parts[2], s: parts[3], e: parts[4] });
+      return;
+    }
   }
   if ((parts[0] === 'movie' || parts[0] === 'tv') && parts[1]) {
     go('detail', { item: { id: +parts[1] }, type: parts[0] });
@@ -249,6 +273,18 @@ searchClear?.addEventListener('click', (e) => {
   }
 });
 
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    searchInput.value = '';
+    searchInput.blur();
+    nav.classList.remove('nav-searching');
+    searchClear?.classList.remove('visible');
+    if (window.location.hash.includes('search')) {
+      go('home');
+    }
+  }
+});
+
 searchInput.addEventListener('input', (e) => {
   clearTimeout(debounce);
   const q = e.target.value.trim();
@@ -263,6 +299,22 @@ searchForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const q = searchInput.value.trim();
   if (q) go('search', { query: q });
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+
+  const playerOverlay = document.querySelector('.player-overlay');
+  if (playerOverlay) {
+    if (document.activeElement !== playerOverlay.querySelector('iframe')) {
+      closeExistingPlayer();
+    }
+    return;
+  }
+
+  if (window.location.hash !== '#/' && window.location.hash !== '') {
+    window.history.back();
+  }
 });
 
 handleHash();

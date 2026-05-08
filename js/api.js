@@ -64,7 +64,7 @@ export const api = {
     get(`/discover/${type}`, { ...params, page }),
   detail: (t, id) =>
     get(`/${t}/${id}`, {
-      append_to_response: 'seasons,genres,credits,similar,images,external_ids',
+      append_to_response: 'seasons,genres,credits,similar,images,external_ids,videos',
     }),
   season: (id, n) => get(`/tv/${id}/season/${n}`),
   search: (q) => get('/search/multi', { query: q, include_adult: false }),

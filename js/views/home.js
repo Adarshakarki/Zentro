@@ -11,45 +11,52 @@ function Hero(items, logos, onCard) {
   const inner = mk('div', 'hero-inner');
   hero.appendChild(inner);
 
-  const slides = items.map((item) => {
-    const type = item.media_type || 'movie';
-    const title = item.title || item.name;
-    const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-    const rating = item.vote_average?.toFixed(1);
-    const backdrop = img(item.backdrop_path, 'original');
-    const logoUrl = logos[item.id];
-    const slide = mk('div', 'hero-slide');
-    slide.innerHTML = `
-      ${backdrop ? `<img class="hero-bg" src="${backdrop}" alt="">` : ''}
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-badges">
-          ${rating ? `<span class="badge-rating">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>` : ''}
-          ${year ? `<span class="badge-plain">${year}</span>` : ''}
-          <span class="badge-plain">${type === 'tv' ? 'Series' : 'Film'}</span>
-        </div>
-        ${
-          logoUrl
-            ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoUrl}" alt="${title}"></div>`
-            : `<h1 class="hero-title">${title}</h1>`
-        }
-        <p class="hero-overview">${(item.overview || '').slice(0, 200)}${(item.overview?.length || 0) > 200 ? '…' : ''}</p>
-        <div class="hero-btns">
-          <button class="hero-btn primary" data-play="1">
-            ${icon('play', 18, { fill: 'currentColor', stroke: 'none' })} Watch Now
-          </button>
-          <button class="hero-btn ghost" data-info="1">More Info</button>
-        </div>
-      </div>`;
-    slide
-      .querySelector('[data-play]')
-      .addEventListener('click', () => onCard(item, type, true));
-    slide
-      .querySelector('[data-info]')
-      .addEventListener('click', () => onCard(item, type, false));
-    inner.appendChild(slide);
-    return slide;
-  });
+  const slides = items.map((item, i) => {
+    try {
+      const type = item.media_type || 'movie';
+      const title = item.title || item.name;
+      const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+      const rating = item.vote_average?.toFixed(1);
+      const backdrop = img(item.backdrop_path, 'w1280');
+      const logoUrl = logos[item.id];
+      const slide = mk('div', 'hero-slide');
+      slide.innerHTML = `
+        ${backdrop ? `<img class="hero-bg" src="${backdrop}" alt="">` : ''}
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-badges">
+            ${rating ? `<span class="badge-rating">${icon('star', 11, { fill: 'currentColor' })} ${rating}</span>` : ''}
+            ${year ? `<span class="badge-plain">${year}</span>` : ''}
+            <span class="badge-plain">${type === 'tv' ? 'Series' : 'Film'}</span>
+          </div>
+          ${
+            logoUrl
+              ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoUrl}" alt="${title}"></div>`
+              : `<h1 class="hero-title">${title}</h1>`
+          }
+          <p class="hero-overview">${(item.overview || '').slice(0, 200)}${(item.overview?.length || 0) > 200 ? '…' : ''}</p>
+          <div class="hero-btns">
+            <button class="hero-btn primary" data-play="1">
+              ${icon('play', 18, { fill: 'currentColor', stroke: 'none' })} Watch Now
+            </button>
+            <button class="hero-btn ghost" data-info="1">More Info</button>
+          </div>
+        </div>`;
+      const playBtn = slide.querySelector('[data-play]');
+      const infoBtn = slide.querySelector('[data-info]');
+      if (!playBtn || !infoBtn) {
+        console.warn(`Hero slide ${i}: buttons not found`, { playBtn: !!playBtn, infoBtn: !!infoBtn });
+        return null;
+      }
+      playBtn.addEventListener('click', () => onCard(item, type, true));
+      infoBtn.addEventListener('click', () => onCard(item, type, false));
+      inner.appendChild(slide);
+      return slide;
+    } catch (err) {
+      console.error(`Error creating hero slide ${i}:`, err);
+      return null;
+    }
+  }).filter(Boolean);
 
   slides[0].classList.add('active');
 
@@ -194,12 +201,16 @@ export async function HomeView(onCard) {
       const logos = {};
       await Promise.all(
         heroItems.map(async (item) => {
-          const t = item.media_type === 'tv' ? 'tv' : 'movie';
-          const u = await api.logo(t, item.id);
-          if (u) logos[item.id] = u;
+          try {
+            const t = item.media_type === 'tv' ? 'tv' : 'movie';
+            const u = await api.logo(t, item.id);
+            if (u) logos[item.id] = u;
+          } catch (err) { console.warn('Logo load failed', err); }
         })
       );
-      root.appendChild(Hero(heroItems, logos, onCard));
+      const hero = Hero(heroItems, logos, onCard);
+      root.appendChild(hero);
+      root._stop = () => hero._stop?.();
     }
 
     const hist = history.get().slice(0, 15);

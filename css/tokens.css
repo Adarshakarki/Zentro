@@ -8,13 +8,13 @@
   --text: #f0ede8;
   --text2: #999;
   --muted: #555;
-  --accent: #16ff00;
-  --accent-d: #0fd400;
+  --accent: #16ff00; /* Vibrant Green */
+  --accent-d: #12cc00;
   --danger: #e63946;
   --live: #e63946;
-  --r: 8px;
-  --r-lg: 12px;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --r: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
   --z-nav: 300;

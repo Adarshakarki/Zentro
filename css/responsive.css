@@ -246,10 +246,16 @@
     width: 34px;
     height: 34px;
   }
+  .player-back,
   .player-close {
     top: 10px;
-    right: 10px;
     width: 34px;
     height: 34px;
+  }
+  .player-back {
+    left: 10px;
+  }
+  .player-close {
+    right: 10px;
   }
 }

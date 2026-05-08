@@ -109,7 +109,6 @@ export async function BrowseView(type, onCard) {
   let loading = false;
   let maxPage = 1;
 
-  /* scrollable tab bar */
   const tabBar = mk('div', 'browse-tab-bar');
   tabs.forEach(({ label }, i) => {
     const b = mk('button', `browse-tab${i === 0 ? ' active' : ''}`, label);

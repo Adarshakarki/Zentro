@@ -2,7 +2,7 @@
   position: relative;
   height: 100vh;
   max-height: 860px;
-  min-height: 500px;
+  min-height: 550px;
   overflow: hidden;
 }
 .hero-inner {
@@ -14,14 +14,23 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .hero-slide.active {
   opacity: 1;
   z-index: 1;
 }
 .hero-slide.active .hero-bg {
-  transform: scale(1.05);
+  animation: heroZoom 12s ease-out forwards;
+}
+
+@keyframes heroZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
 }
 .hero-slide.prev {
   opacity: 0;
@@ -43,10 +52,10 @@
     linear-gradient(
       to right,
       rgba(10, 10, 10, 0.92) 0%,
-      rgba(10, 10, 10, 0.5) 50%,
-      transparent 80%
+      rgba(10, 10, 10, 0.4) 60%,
+      transparent 95%
     ),
-    linear-gradient(to top, rgba(10, 10, 10, 1) 0%, transparent 55%);
+    linear-gradient(to top, rgba(10, 10, 10, 1) 0%, transparent 65%);
 }
 
 .hero-content {
@@ -55,7 +64,10 @@
   left: 0;
   padding: 0 52px 72px;
   max-width: 620px;
-  animation: heroContentIn 0.5s ease both;
+}
+
+.hero-slide.active .hero-content {
+  animation: heroContentIn 0.8s cubic-bezier(0.2, 0, 0.2, 1) both;
 }
 @keyframes heroContentIn {
   from {
@@ -104,18 +116,27 @@
 }
 
 .hero-title {
-  font-size: clamp(32px, 5vw, 58px);
-  font-weight: 700;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
   line-height: 1.05;
   margin-bottom: 12px;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+  letter-spacing: -1.5px;
+  text-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.8),
+    0 4px 24px rgba(0, 0, 0, 0.7),
+    0 8px 32px rgba(0, 0, 0, 0.6);
 }
 .hero-overview {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.65;
   color: rgba(240, 237, 232, 0.65);
   margin-bottom: 26px;
   max-width: 480px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .hero-btns {
   display: flex;
@@ -126,30 +147,37 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: all var(--ease);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.5px;
 }
 .hero-btn.primary {
   background: var(--accent);
   color: #000;
+  box-shadow: 0 4px 16px rgba(22, 255, 0, 0.3);
 }
 .hero-btn.primary:hover {
   background: var(--accent-d);
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(22, 255, 0, 0.4);
 }
 .hero-btn.ghost {
   background: rgba(255, 255, 255, 0.12);
   color: var(--text);
   border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 .hero-btn.ghost:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(22, 255, 0, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(22, 255, 0, 0.1);
 }
 
 .hero-dots {
@@ -161,18 +189,24 @@
   z-index: 10;
 }
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.3);
-  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   padding: 0;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dot:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.15);
 }
 .dot.active {
   background: var(--accent);
-  width: 20px;
+  width: 24px;
+  box-shadow: 0 0 12px rgba(22, 255, 0, 0.4);
+  border-color: var(--accent);
 }
 
 .home-view {
@@ -189,8 +223,9 @@
   margin-bottom: 14px;
 }
 .row-title {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 .row-type-badge {
   font-size: 10px;
@@ -231,18 +266,19 @@
   margin-left: 12px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 .row-toggle-btn {
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
   border: none;
   background: none;
   cursor: pointer;
   color: var(--text2);
-  transition: all var(--ease);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .row-toggle-btn.active {
   background: var(--accent);
@@ -250,4 +286,5 @@
 }
 .row-toggle-btn:not(.active):hover {
   color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
 }
