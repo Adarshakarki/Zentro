@@ -6,26 +6,26 @@ import { progress, history } from './storage.js';
 function trackProgress(key, itemId, type) {
   const handler = (e) => {
     try {
-      const msg = JSON.parse(e.data);
-      if (msg.type !== 'PLAYER_EVENT') return;
-      const { event, currentTime, duration, progress: pct, season, episode } = msg.data;
+      if (!e.data || e.data.type !== 'PLAYER_EVENT') return;
+      const { player_info, player_status, player_progress, player_duration } = e.data.data || {};
+      if (!player_info) return;
 
-      if (type === 'tv' && season && episode) {
-        const h = `#/watch/tv/${itemId}/${season}/${episode}`;
+      if (type === 'tv' && player_info.season && player_info.episode) {
+        const h = `#/watch/tv/${itemId}/${player_info.season}/${player_info.episode}`;
         if (window.location.hash !== h) {
           window.history.replaceState(null, '', h);
-          key = `tv_${itemId}_s${season}_e${episode}`;
+          key = `tv_${itemId}_s${player_info.season}_e${player_info.episode}`;
         }
       }
 
       if (
-        ['timeupdate', 'pause', 'ended', 'seeked'].includes(event) &&
-        currentTime > 5
+        ['playing', 'paused', 'completed', 'seeked'].includes(player_status) &&
+        player_progress > 5
       ) {
         progress.set(key, {
-          t: Math.floor(currentTime),
-          d: Math.floor(duration),
-          p: +(pct || 0).toFixed(1),
+          t: Math.floor(player_progress),
+          d: Math.floor(player_duration || 0),
+          p: player_duration ? +((player_progress / player_duration) * 100).toFixed(1) : 0,
         });
       }
     } catch {}
@@ -123,7 +123,7 @@ export function openMoviePlayer(item) {
   history.add(item, 'movie');
   const key = `movie_${item.id}`;
   const saved = progress.get(key);
-  const opts = saved?.t > 10 ? { timestamp: saved.t } : {};
+  const opts = saved?.t > 10 ? { startAt: saved.t } : {};
   const ov = openPlayer(provider.movie(item.id, opts), key, item.id, 'movie');
   if (ov) ov._id = `movie_${item.id}`;
 }
@@ -140,7 +140,7 @@ export function openEpisodePlayer(itemId, s, e) {
 
   const key = `tv_${itemId}_s${s}_e${e}`;
   const saved = progress.get(key);
-  const opts = saved?.t > 10 ? { timestamp: saved.t } : {};
+  const opts = saved?.t > 10 ? { startAt: saved.t } : {};
   const ov = openPlayer(provider.tv(itemId, s, e, opts), key, itemId, 'tv');
   if (ov) ov._id = key;
 }
