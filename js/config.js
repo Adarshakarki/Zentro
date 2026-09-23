@@ -36,17 +36,15 @@ export const img = (path, size = 'w342') =>
 
 export const player = {
   movie: (id, opts = {}) =>
-    buildVid(`https://www.vidking.net/embed/movie/${id}`, opts),
+    buildVid(`https://vidsrc.sh/embed/movie/${id}`, opts),
   tv: (id, s, e, opts = {}) =>
-    buildVid(`https://www.vidking.net/embed/tv/${id}/${s}/${e}`, opts),
+    buildVid(`https://vidsrc.sh/embed/tv/${id}/${s}/${e}`, opts),
 };
 
 function buildVid(base, extra = {}) {
   const p = new URLSearchParams({
-    color: '16FF00',
-    autoPlay: 'true',
-    nextEpisode: 'true',
-    episodeSelector: 'true',
+    autoplay: '1',
+    autonext: '1',
     ...extra,
   });
   return `${base}?${p}`;
