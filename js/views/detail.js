@@ -5,6 +5,8 @@ import { icon } from '../icons.js';
 import { openMoviePlayer, openEpisodePlayer } from '../player.js';
 import { history, watchlist, progress } from '../storage.js';
 
+const wikiCache = new Map();
+
 function getLogoUrl(images) {
   const logos = images?.logos || [];
   const en = logos.find((l) => l.iso_639_1 === 'en') || logos[0];
@@ -12,13 +14,17 @@ function getLogoUrl(images) {
 }
 
 async function wikiPhoto(name) {
+  if (wikiCache.has(name)) return wikiCache.get(name);
   try {
     const u = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=120&origin=*`;
     const d = await fetch(u).then((r) => r.json());
     const pages = d.query?.pages || {};
     const page = Object.values(pages)[0];
-    return page?.thumbnail?.source || null;
+    const src = page?.thumbnail?.source || null;
+    wikiCache.set(name, src);
+    return src;
   } catch {
+    wikiCache.set(name, null);
     return null;
   }
 }
@@ -54,6 +60,7 @@ export async function DetailView(item, type, onBack, onCard) {
     root.innerHTML = '';
 
     const back = mk('button', 'back-btn detail-back');
+    back.setAttribute('aria-label', 'Go back');
     back.innerHTML = icon('chevronLeft', 20);
     back.addEventListener('click', onBack);
     root.appendChild(back);
@@ -71,7 +78,7 @@ export async function DetailView(item, type, onBack, onCard) {
         mk(
           'div',
           'detail-logo-wrap',
-          `<img class="detail-logo" src="${logoUrl}" alt="${title}">`
+          `<img class="detail-logo" src="${logoUrl}" alt="${title}" decoding="async">`
         )
       );
     } else {
@@ -102,7 +109,8 @@ export async function DetailView(item, type, onBack, onCard) {
     playBtn.innerHTML = `${icon('play', 16, { fill: 'currentColor', stroke: 'none' })} Play`;
     acts.appendChild(playBtn);
 
-    const wlBtn = mk('button', 'action-btn ghost');
+    const wlBtn = mk('button', `action-btn ghost${inWl ? ' saved' : ''}`);
+    wlBtn.setAttribute('aria-pressed', String(inWl));
     wlBtn.innerHTML = `${icon('bookmark', 15, { fill: inWl ? 'currentColor' : 'none' })} ${inWl ? 'Saved' : 'Watchlist'}`;
     acts.appendChild(wlBtn);
 
@@ -139,8 +147,9 @@ export async function DetailView(item, type, onBack, onCard) {
 
     content.appendChild(acts);
 
-    if (type === 'movie')
+    if (type === 'movie') {
       playBtn.addEventListener('click', () => openMoviePlayer(d));
+    }
 
     if (type === 'tv') {
       const validSeasons = (d.seasons || []).filter((s) => s.season_number > 0);
@@ -182,8 +191,9 @@ export async function DetailView(item, type, onBack, onCard) {
                 ep.episode_number
               );
               const prog = progress.get(epKey);
+              const epTitle = ep.name || `Episode ${ep.episode_number}`;
               const thumb = ep.still_path
-                ? `<img src="${img(ep.still_path, 'w300')}" loading="lazy">`
+                ? `<img src="${img(ep.still_path, 'w300')}" alt="${epTitle}" width="300" height="169" loading="lazy" decoding="async">`
                 : `<div class="ep-thumb-ph">${icon('play', 18, { stroke: 'var(--muted)' })}</div>`;
               const overviewTxt =
                 (ep.overview || '').slice(0, 160) +
@@ -226,6 +236,8 @@ export async function DetailView(item, type, onBack, onCard) {
 
     wlBtn.addEventListener('click', () => {
       const added = watchlist.toggle(d, type);
+      wlBtn.classList.toggle('saved', added);
+      wlBtn.setAttribute('aria-pressed', String(added));
       wlBtn.innerHTML = `${icon('bookmark', 15, { fill: added ? 'currentColor' : 'none' })} ${added ? 'Saved' : 'Watchlist'}`;
     });
 
@@ -243,7 +255,7 @@ export async function DetailView(item, type, onBack, onCard) {
           <div class="cast-avatar">
             ${
               c.profile_path
-                ? `<img src="${img(c.profile_path, 'w185')}" alt="${c.name}" loading="lazy">`
+                ? `<img src="${img(c.profile_path, 'w185')}" alt="${c.name}" width="185" height="278" loading="lazy" decoding="async">`
                 : `<div class="cast-avatar-ph">${icon('play', 16, { stroke: 'var(--muted)' })}</div>`
             }
           </div>
@@ -263,8 +275,9 @@ export async function DetailView(item, type, onBack, onCard) {
         );
         if (!card) return;
         const ph = card.querySelector('.cast-avatar-ph');
-        if (ph)
-          ph.outerHTML = `<img src="${wikiUrl}" alt="${c.name}" loading="lazy">`;
+        if (ph) {
+          ph.outerHTML = `<img src="${wikiUrl}" alt="${c.name}" width="120" height="120" loading="lazy" decoding="async">`;
+        }
       });
     }
 

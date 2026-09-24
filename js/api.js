@@ -1,6 +1,10 @@
 import { TMDB, img, ready } from './config.js';
 
-async function get(path, params = {}) {
+const CACHE_TTL = 5 * 60 * 1000;
+const apiCache = new Map();
+const inFlight = new Map();
+
+async function get(path, params = {}, signal = null) {
   await ready;
 
   const isProxy = !TMDB.base.includes('themoviedb');
@@ -19,10 +23,35 @@ async function get(path, params = {}) {
     u.searchParams.set('api_key', TMDB.key);
   }
 
-  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-  const r = await fetch(u);
-  if (!r.ok) throw new Error(`TMDB ${r.status}`);
-  return r.json();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) u.searchParams.set(k, v);
+  });
+
+  const cacheKey = u.toString();
+
+  const cached = apiCache.get(cacheKey);
+  if (cached && Date.now() - cached.time < CACHE_TTL) {
+    return cached.data;
+  }
+
+  if (inFlight.has(cacheKey) && !signal) {
+    return inFlight.get(cacheKey);
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const r = await fetch(u, { signal });
+      if (!r.ok) throw new Error(`TMDB ${r.status}`);
+      const data = await r.json();
+      apiCache.set(cacheKey, { time: Date.now(), data });
+      return data;
+    } finally {
+      inFlight.delete(cacheKey);
+    }
+  })();
+
+  if (!signal) inFlight.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 const disc = (type, providers, page = 1) =>
@@ -32,6 +61,8 @@ const disc = (type, providers, page = 1) =>
     sort_by: 'popularity.desc',
     page,
   });
+
+const logoCache = new Map();
 
 export const api = {
   trending: () => get('/trending/all/week'),
@@ -67,14 +98,19 @@ export const api = {
       append_to_response: 'seasons,genres,credits,similar,images,external_ids,videos',
     }),
   season: (id, n) => get(`/tv/${id}/season/${n}`),
-  search: (q) => get('/search/multi', { query: q, include_adult: false }),
+  search: (q, signal) => get('/search/multi', { query: q, include_adult: false }, signal),
   logo: async (type, id) => {
+    const key = `${type}_${id}`;
+    if (logoCache.has(key)) return logoCache.get(key);
     try {
       const d = await get(`/${type}/${id}/images`);
       const en =
         (d.logos || []).find((l) => l.iso_639_1 === 'en') || (d.logos || [])[0];
-      return en ? img(en.file_path, 'w500') : null;
+      const logoUrl = en ? img(en.file_path, 'w500') : null;
+      logoCache.set(key, logoUrl);
+      return logoUrl;
     } catch {
+      logoCache.set(key, null);
       return null;
     }
   },
@@ -85,5 +121,9 @@ export const api = {
     } catch {
       return [];
     }
+  },
+  clearCache: () => {
+    apiCache.clear();
+    logoCache.clear();
   },
 };

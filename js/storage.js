@@ -3,62 +3,107 @@ const K = {
   watchlist: 'cl_watchlist',
   progress: 'cl_progress',
 };
+
+const memCache = {
+  history: null,
+  watchlist: null,
+  progress: null,
+};
+
 const load = (k, def = []) => {
   try {
-    return JSON.parse(localStorage.getItem(k)) || def;
+    const raw = localStorage.getItem(k);
+    return raw ? JSON.parse(raw) : def;
   } catch {
     return def;
   }
 };
-const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+const getCache = (key, def) => {
+  if (memCache[key] === null) {
+    memCache[key] = load(K[key], def);
+  }
+  return memCache[key];
+};
+
+const save = (k, v) => {
+  try {
+    localStorage.setItem(k, JSON.stringify(v));
+  } catch (err) {
+    console.warn('[storage] Failed to save to localStorage:', err);
+  }
+};
+
+let progressSaveTimeout = null;
+const flushProgress = () => {
+  if (memCache.progress !== null) {
+    save(K.progress, memCache.progress);
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', flushProgress);
+  window.addEventListener('pagehide', flushProgress);
+}
 
 export const history = {
   add(item, type, meta = {}) {
     const title = item.title || item.name;
     if (!title || !item.id) return;
-    let h = load(K.history).filter(
+    let h = getCache('history', []).filter(
       (x) => !(x.id === item.id && x.type === type)
     );
     h.unshift({
       id: item.id,
       type,
       title,
-      poster: item.poster_path,
+      poster: item.poster_path || item.poster,
       added: Date.now(),
       ...meta,
     });
-    save(K.history, h.slice(0, 100));
+    h = h.slice(0, 100);
+    memCache.history = h;
+    save(K.history, h);
   },
-  get: () => load(K.history).filter((x) => x.title && x.id),
-  remove: (id, t) =>
-    save(
-      K.history,
-      load(K.history).filter((x) => !(x.id === id && x.type === t))
-    ),
-  clear: () => localStorage.removeItem(K.history),
+  get: () => getCache('history', []).filter((x) => x.title && x.id),
+  remove(id, t) {
+    const filtered = getCache('history', []).filter((x) => !(x.id === id && x.type === t));
+    memCache.history = filtered;
+    save(K.history, filtered);
+  },
+  clear() {
+    memCache.history = [];
+    localStorage.removeItem(K.history);
+  },
 };
 
 export const watchlist = {
   toggle(item, type) {
     const title = item.title || item.name;
     if (!title || !item.id) return false;
-    let w = load(K.watchlist);
+    let w = getCache('watchlist', []);
     const exists = w.some((x) => x.id === item.id && x.type === type);
-    if (exists) w = w.filter((x) => !(x.id === item.id && x.type === type));
-    else
+    if (exists) {
+      w = w.filter((x) => !(x.id === item.id && x.type === type));
+    } else {
       w.unshift({
         id: item.id,
         type,
         title,
-        poster: item.poster_path,
+        poster: item.poster_path || item.poster,
         added: Date.now(),
       });
+    }
+    memCache.watchlist = w;
     save(K.watchlist, w);
     return !exists;
   },
-  has: (id, t) => load(K.watchlist).some((x) => x.id === id && x.type === t),
-  get: () => load(K.watchlist).filter((x) => x.title && x.id),
-  clear: () => localStorage.removeItem(K.watchlist),
+  has: (id, t) => getCache('watchlist', []).some((x) => x.id === id && x.type === t),
+  get: () => getCache('watchlist', []).filter((x) => x.title && x.id),
+  clear() {
+    memCache.watchlist = [];
+    localStorage.removeItem(K.watchlist);
+  },
 };
 
 export const progress = {
@@ -67,12 +112,19 @@ export const progress = {
     return `tv_${id}_s${s || 1}_e${e || 1}`;
   },
   set(key, { t, d, p }) {
-    const all = load(K.progress, {});
+    const all = getCache('progress', {});
     all[key] = { t, d, p };
-    save(K.progress, all);
+    memCache.progress = all;
+
+    if (!progressSaveTimeout) {
+      progressSaveTimeout = setTimeout(() => {
+        progressSaveTimeout = null;
+        flushProgress();
+      }, 1500);
+    }
   },
   get(key) {
-    return load(K.progress, {})[key] || null;
+    return getCache('progress', {})[key] || null;
   },
   label(key) {
     const s = this.get(key);

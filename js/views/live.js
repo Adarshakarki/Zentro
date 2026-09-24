@@ -32,18 +32,6 @@ const ENGLISH_COUNTRIES = new Set([
 
 let _cache = null;
 
-async function checkStatus(url) {
-  try {
-    const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 5000);
-    await fetch(url, { mode: 'no-cors', signal: ctrl.signal });
-    clearTimeout(id);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function loadData() {
   if (_cache) return _cache;
 
@@ -55,8 +43,9 @@ async function loadData() {
 
   const streamMap = {};
   for (const s of streams) {
-    if (s.channel && s.url && !streamMap[s.channel])
+    if (s.channel && s.url && !streamMap[s.channel]) {
       streamMap[s.channel] = s.url;
+    }
   }
 
   const proxyLogo = (url) =>
@@ -116,6 +105,7 @@ export async function LiveView(onBack) {
   const root = mk('div', 'live-view');
 
   const back = mk('button', 'back-btn');
+  back.setAttribute('aria-label', 'Go back');
   back.innerHTML = icon('chevronLeft', 20);
   back.addEventListener('click', onBack);
   root.appendChild(back);
@@ -126,7 +116,7 @@ export async function LiveView(onBack) {
       'live-heading',
       `
     <h1 class="live-title">Live TV</h1>
-    <p class="live-sub">Click any channel to watch fullscreen · <span class="live-legend"><span class="dot-online">${icon('circle', 8, { fill: 'currentColor' })}</span> Online <span class="dot-offline">${icon('circle', 8, { fill: 'currentColor' })}</span> Offline</span></p>`
+    <p class="live-sub">Click any channel to watch fullscreen</p>`
     )
   );
 
@@ -151,32 +141,23 @@ export async function LiveView(onBack) {
     }
 
     const grid = mk('div', 'ch-grid');
-    channels.slice(0, 100).forEach((ch, index) => {
+    channels.slice(0, 100).forEach((ch) => {
       const card = mk('div', 'ch-card');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Watch ${ch.name}`);
       card.innerHTML = `
         <div class="ch-thumb">
           ${
             ch.logo
-              ? `<img src="${ch.logo}" alt="${ch.name}" loading="lazy" onerror="this.style.display='none'">`
+              ? `<img src="${ch.logo}" alt="${ch.name}" width="160" height="90" loading="lazy" decoding="async" onerror="this.style.display='none'">`
               : `<span class="ch-initial">${ch.name.charAt(0)}</span>`
           }
         </div>
         <div class="ch-name">${ch.name}</div>
-        ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}
-        <span class="ch-status checking">${icon('circle', 8, { fill: 'currentColor' })}</span>`;
+        ${ch.country ? `<div class="ch-country">${ch.country}</div>` : ''}`;
 
       card.addEventListener('click', () => openLivePlayer(ch.stream, ch.name));
       grid.appendChild(card);
-
-      setTimeout(() => {
-        checkStatus(ch.stream).then((isUp) => {
-          const dot = card.querySelector('.ch-status');
-          if (dot) {
-            dot.className = `ch-status ${isUp ? 'online' : 'offline'}`;
-            dot.title = isUp ? 'Online' : 'Offline / Restricted';
-          }
-        });
-      }, index * 100);
     });
     area.appendChild(grid);
   }
@@ -199,7 +180,7 @@ export async function LiveView(onBack) {
       const count = data.byCategory[id].length;
       const b = mk(
         'button',
-        `live-cat-btn${i === 0 ? ' active' : ''}`,
+        `live-cat-btn cat-${id}${i === 0 ? ' active' : ''}`,
         `${label} <span class="cat-count">${count}</span>`
       );
       b.dataset.cat = id;

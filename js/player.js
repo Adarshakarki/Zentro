@@ -1,34 +1,51 @@
-import { player as provider } from './config.js';
+import { player as provider, PLAYER_ORIGIN } from './config.js';
 import { mk } from './components.js';
 import { icon } from './icons.js';
 import { progress, history } from './storage.js';
 
 function trackProgress(key, itemId, type) {
   const handler = (e) => {
-    try {
-      if (!e.data || e.data.type !== 'PLAYER_EVENT') return;
-      const { player_info, player_status, player_progress, player_duration } = e.data.data || {};
-      if (!player_info) return;
+    if (e.origin !== PLAYER_ORIGIN && !e.origin.includes('vidphantom')) return;
+    const d = e.data;
+    if (!d || d.type !== 'PLAYER_EVENT') return;
 
-      if (type === 'tv' && player_info.season && player_info.episode) {
-        const h = `#/watch/tv/${itemId}/${player_info.season}/${player_info.episode}`;
-        if (window.location.hash !== h) {
-          window.history.replaceState(null, '', h);
-          key = `tv_${itemId}_s${player_info.season}_e${player_info.episode}`;
-        }
-      }
+    const { event, currentTime, duration, season, episode } = d.data || {};
 
-      if (
-        ['playing', 'paused', 'completed', 'seeked'].includes(player_status) &&
-        player_progress > 5
-      ) {
-        progress.set(key, {
-          t: Math.floor(player_progress),
-          d: Math.floor(player_duration || 0),
-          p: player_duration ? +((player_progress / player_duration) * 100).toFixed(1) : 0,
-        });
+    if (type === 'tv' && season && episode) {
+      const h = `#/watch/tv/${itemId}/${season}/${episode}`;
+      if (window.location.hash !== h) {
+        window.history.replaceState(null, '', h);
+        key = `tv_${itemId}_s${season}_e${episode}`;
       }
-    } catch {}
+    }
+
+    if (
+      ['play', 'pause', 'ended', 'seeked', 'timeupdate'].includes(event) &&
+      currentTime > 5
+    ) {
+      progress.set(key, {
+        t: Math.floor(currentTime),
+        d: Math.floor(duration || 0),
+        p: duration ? +((currentTime / duration) * 100).toFixed(1) : 0,
+      });
+    }
+  };
+  window.addEventListener('message', handler);
+  return () => window.removeEventListener('message', handler);
+}
+
+function trackNextEpisode(itemId) {
+  const handler = (e) => {
+    if (e.origin !== PLAYER_ORIGIN && !e.origin.includes('vidphantom')) return;
+    if (e.data?.type !== 'PLAYER_NEXT_EPISODE') return;
+
+    const { season, episode, nextUrl } = e.data.detail || {};
+    if (season && episode) {
+      openEpisodePlayer(itemId, season, episode);
+    } else if (nextUrl) {
+      const m = nextUrl.match(/\/tv\/\d+\/(\d+)\/(\d+)/);
+      if (m) openEpisodePlayer(itemId, m[1], m[2]);
+    }
   };
   window.addEventListener('message', handler);
   return () => window.removeEventListener('message', handler);
@@ -44,10 +61,10 @@ export function openPlayer(src, progressKey, itemId, type) {
   closeExistingPlayer();
 
   const overlay = mk('div', 'player-overlay');
-  const backBtn = mk('button', 'player-back', icon('chevronLeft', 20));
   const closeBtn = mk('button', 'player-close', icon('x', 20));
+  closeBtn.setAttribute('aria-label', 'Close player');
   const iframe = document.createElement('iframe');
-  
+
   iframe.style.border = 'none';
   iframe.setAttribute(
     'allow',
@@ -63,24 +80,30 @@ export function openPlayer(src, progressKey, itemId, type) {
   document.addEventListener('fullscreenchange', onFsChange);
 
   overlay.addEventListener('mousedown', (e) => {
-    if (e.target !== closeBtn && e.target !== backBtn) setTimeout(() => iframe.focus(), 0);
+    if (e.target !== closeBtn) setTimeout(() => iframe.focus(), 0);
   });
 
   iframe.src = src;
-  overlay.append(iframe, backBtn, closeBtn);
+  overlay.append(iframe, closeBtn);
   document.body.appendChild(overlay);
 
-  const cleanup = progressKey ? trackProgress(progressKey, itemId, type) : () => {};
+  const cleanupProgress = progressKey ? trackProgress(progressKey, itemId, type) : () => {};
+  const cleanupNext = type === 'tv' ? trackNextEpisode(itemId) : () => {};
 
   const close = (e, skipHistory = false) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    cleanup();
+    cleanupProgress();
+    cleanupNext();
     iframe.src = '';
     overlay.remove();
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('fullscreenchange', onFsChange);
-    if (!skipHistory && window.location.hash.includes('watch/')) {
-      window.history.back();
+    if (!skipHistory) {
+      if (itemId && type) {
+        window.location.hash = `#/${type}/${itemId}`;
+      } else if (window.location.hash.includes('watch/')) {
+        window.history.back();
+      }
     }
   };
   overlay._close = close;
@@ -104,7 +127,6 @@ export function openPlayer(src, progressKey, itemId, type) {
     }
   };
 
-  backBtn.onclick = (e) => close(e);
   closeBtn.onclick = (e) => close(e);
   document.addEventListener('keydown', onKey);
   return overlay;
@@ -112,7 +134,7 @@ export function openPlayer(src, progressKey, itemId, type) {
 
 export function openMoviePlayer(item) {
   if (!item?.id) return;
-  
+
   const h = `watch/movie/${item.id}`;
   if (window.location.hash.replace('#/', '') !== h) {
     window.location.hash = `#/${h}`;
@@ -149,8 +171,8 @@ export function openLivePlayer(url, title) {
   closeExistingPlayer();
 
   const overlay = mk('div', 'player-overlay');
-  const backBtn = mk('button', 'player-back', icon('chevronLeft', 20));
   const closeBtn = mk('button', 'player-close', icon('x', 20));
+  closeBtn.setAttribute('aria-label', 'Close player');
   const video = document.createElement('video');
   const loading = mk(
     'div',
@@ -167,7 +189,7 @@ export function openLivePlayer(url, title) {
   video.autoplay = true;
   video.playsInline = true;
 
-  overlay.append(video, backBtn, closeBtn, loading, info);
+  overlay.append(video, closeBtn, loading, info);
   document.body.appendChild(overlay);
 
   const onFsChange = () => {
@@ -201,7 +223,6 @@ export function openLivePlayer(url, title) {
     }
   };
 
-  backBtn.onclick = close;
   closeBtn.onclick = close;
   document.addEventListener('keydown', onKey);
 

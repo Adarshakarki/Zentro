@@ -23,10 +23,10 @@ window.addEventListener(
       const down = y > lastY;
       if (y < THRESHOLD) {
         nav.classList.remove('nav-hidden');
-      } else if (down) {
+      } else if (down && Math.abs(y - lastY) > 5) {
         nav.classList.add('nav-hidden');
         closeBrowse();
-      } else {
+      } else if (!down && Math.abs(y - lastY) > 5) {
         nav.classList.remove('nav-hidden');
       }
       lastY = y;
@@ -40,7 +40,7 @@ window.addEventListener(
 const NAV_PAGES = new Set(['home', 'library', 'search', 'browse']);
 function setNav(page) {
   const show = NAV_PAGES.has(page);
-  nav.classList.toggle('nav-overlay', page === 'home');
+  nav.classList.add('nav-overlay');
   nav.classList.toggle('nav-force-hide', !show);
   nav.classList.remove('nav-hidden');
   lastY = 0;
@@ -68,18 +68,18 @@ const browseWrap = document.getElementById('browseWrap');
 const browseBtn = document.getElementById('navBrowse');
 
 function closeBrowse() {
-  browseWrap.classList.remove('open');
+  browseWrap?.classList.remove('open');
 }
 function toggleBrowse() {
-  browseWrap.classList.toggle('open');
+  browseWrap?.classList.toggle('open');
 }
 
-browseBtn.addEventListener('click', (e) => {
+browseBtn?.addEventListener('click', (e) => {
   e.stopPropagation();
   toggleBrowse();
 });
 document.addEventListener('click', (e) => {
-  if (!browseWrap.contains(e.target)) closeBrowse();
+  if (browseWrap && !browseWrap.contains(e.target)) closeBrowse();
 });
 
 document.querySelectorAll('.browse-item').forEach((btn) => {
@@ -106,6 +106,7 @@ async function go(page, payload = {}) {
   try {
     switch (page) {
       case 'home':
+        window.location.hash = '#/';
         mount(
           await HomeView(
             (item, type, playNow) => {
@@ -129,6 +130,7 @@ async function go(page, payload = {}) {
             item,
             type,
             () => window.history.back(),
+            () => go('home'),
             (i, t) => go('detail', { item: i, type: t })
           )
         );
@@ -144,15 +146,31 @@ async function go(page, payload = {}) {
         );
         break;
       }
-    
-            case 'watch': {
+
+      case 'watch': {
         const { type, id, s, e } = payload;
-        if (type === 'movie') openMoviePlayer({ id: +id });
-        else openEpisodePlayer(+id, +s, +e);
+        mount(
+          await DetailView(
+            { id: +id },
+            type,
+            () => go('home'),
+            (i, t) => go('detail', { item: i, type: t })
+          )
+        );
+        if (type === 'movie') {
+          openMoviePlayer({ id: +id });
+        } else {
+          openEpisodePlayer(+id, +s || 1, +e || 1);
+        }
         break;
       }
 
       case 'search':
+        if (!payload.query?.trim()) {
+          go('home');
+          break;
+        }
+        window.location.hash = `#/search/${encodeURIComponent(payload.query || '')}`;
         mount(
           await SearchView(payload.query, (item, type) =>
             go('detail', { item, type })
@@ -183,7 +201,6 @@ function handleHash() {
     closeExistingPlayer(true);
   }
 
-
   if (!hash || hash === '/') {
     go('home');
     return;
@@ -199,6 +216,15 @@ function handleHash() {
   }
   if (parts[0] === 'browse' && parts[1]) {
     go('browse', { type: parts[1] });
+    return;
+  }
+  if (parts[0] === 'search') {
+    const query = decodeURIComponent(parts.slice(1).join('/') || '').trim();
+    if (query) {
+      go('search', { query });
+    } else {
+      go('home');
+    }
     return;
   }
   if (parts[0] === 'watch') {
@@ -219,15 +245,16 @@ function handleHash() {
 }
 
 window.addEventListener('popstate', handleHash);
+window.addEventListener('hashchange', handleHash);
 
-document.getElementById('navHome').addEventListener('click', () => {
+document.getElementById('navHome')?.addEventListener('click', () => {
   window.location.hash = '#/';
   go('home');
 });
-document
-  .getElementById('navLibrary')
-  .addEventListener('click', () => go('library'));
-document.querySelector('.logo').addEventListener('click', (e) => {
+document.getElementById('navLibrary')?.addEventListener('click', () => {
+  go('library');
+});
+document.querySelector('.logo')?.addEventListener('click', (e) => {
   e.preventDefault();
   window.location.hash = '#/';
   go('home');
@@ -248,15 +275,15 @@ document.querySelectorAll('[data-icon]').forEach((el) => {
 if (searchClear) searchClear.innerHTML = icon('x', 14);
 if (searchIcon) searchIcon.innerHTML = icon('search', 15);
 
-searchForm.addEventListener('click', () => {
-  if (window.innerWidth <= 768) searchInput.focus();
+searchForm?.addEventListener('click', () => {
+  if (window.innerWidth <= 768) searchInput?.focus();
 });
 
-searchInput.addEventListener('focus', () => {
+searchInput?.addEventListener('focus', () => {
   nav.classList.add('nav-searching');
 });
 
-searchInput.addEventListener('blur', () => {
+searchInput?.addEventListener('blur', () => {
   setTimeout(() => {
     if (!searchInput.value.trim()) nav.classList.remove('nav-searching');
   }, 200);
@@ -265,15 +292,17 @@ searchInput.addEventListener('blur', () => {
 searchClear?.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
-  searchInput.value = '';
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.focus();
+  }
   searchClear.classList.remove('visible');
-  searchInput.focus();
   if (window.location.hash.includes('search')) {
     go('home');
   }
 });
 
-searchInput.addEventListener('keydown', (e) => {
+searchInput?.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     searchInput.value = '';
     searchInput.blur();
@@ -285,7 +314,7 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
-searchInput.addEventListener('input', (e) => {
+searchInput?.addEventListener('input', (e) => {
   clearTimeout(debounce);
   const q = e.target.value.trim();
   searchClear?.classList.toggle('visible', !!q);
@@ -293,12 +322,18 @@ searchInput.addEventListener('input', (e) => {
     if (window.location.hash.includes('search')) go('home');
     return;
   }
-  debounce = setTimeout(() => go('search', { query: q }), 400);
+  debounce = setTimeout(() => go('search', { query: q }), 300);
 });
-searchForm.addEventListener('submit', (e) => {
+
+searchForm?.addEventListener('submit', (e) => {
   e.preventDefault();
-  const q = searchInput.value.trim();
-  if (q) go('search', { query: q });
+  const q = searchInput?.value.trim();
+  if (q) {
+    go('search', { query: q });
+  } else {
+    searchClear?.classList.remove('visible');
+    go('home');
+  }
 });
 
 window.addEventListener('keydown', (e) => {

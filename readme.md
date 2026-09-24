@@ -9,7 +9,7 @@
 </div>
 
 A clean, fast streaming frontend for movies, TV series, and live TV.  
-Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidking](https://www.vidking.net/) for playback, and [iptv-org](https://github.com/iptv-org/iptv) for live channels.
+Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidphantom](https://vidphantom.com) for playback, and [iptv-org](https://github.com/iptv-org/iptv) for live channels.
 
 ---
 
@@ -22,26 +22,28 @@ Powered by [TMDB](https://www.themoviedb.org/) for metadata, [Vidking](https://w
 ---
 
 ## Screenshots
-1. Home
+1. Hero
+![hero](assets/screenshots/movie.png)
+2. Home
 ![home](assets/screenshots/home.png)
-2. Movie
-![movie](assets/screenshots/movie.png)
-3. Series
+3. Movie details
+![moviedetails](assets/screenshots/moviedetails.png)
+4. Series
 ![Series](assets/screenshots/series.png)
 4. Player
 ![player](assets/screenshots/player.png)
-5. Live TV
+6. Live TV
 ![tv](assets/screenshots/tv.png)
-6. Library
+7. Library
 ![library](assets/screenshots/library.png)
-7. Browse
+8. Browse
 ![browse](assets/screenshots/browse.png)
-8. Download
+9. Download
 ![download](assets/screenshots/download.png)
 
 ## Disclaimer
 **Note:** Zentro is a frontend interface only. This project does not host, store, or distribute any media files.
-* Playback: Powered by the [Vidking API](https://www.vidking.net/).
+* Playback: Powered by the [Vidphantom API](https://vidphantom.com).
 * Downloads: Handled via [Vidvault](https://vidvault.ru/).
 
 

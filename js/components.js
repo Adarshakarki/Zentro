@@ -49,7 +49,7 @@ export function Card({ item, type, onClick, showType = false }) {
   card.setAttribute('aria-label', `View details for ${title}`);
   card.innerHTML = `
     <div class="card-thumb">
-      ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
+      ${poster ? `<img src="${poster}" alt="${title}" width="342" height="513" loading="lazy" decoding="async">` : `<div class="card-ph">${icon('film', 28, { stroke: 'var(--muted)' })}</div>`}
       <div class="card-overlay">
         <div class="card-play-icon">${icon('play', 20, { fill: '#000', stroke: 'none' })}</div>
       </div>

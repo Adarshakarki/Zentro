@@ -20,11 +20,19 @@ const paths = {
   externalLink: `<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>`,
 };
 
+const iconCache = new Map();
+
 export const icon = (name, size = 15, attrs = {}) => {
   const inner = paths[name] || paths['play'];
   if (!inner) return '';
+  const attrKey = JSON.stringify(attrs);
+  const cacheKey = `${name}_${size}_${attrKey}`;
+  if (iconCache.has(cacheKey)) return iconCache.get(cacheKey);
+
   const extra = Object.entries(attrs)
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
-  return `<svg ${BASE} width="${size}" height="${size}" ${extra}>${inner}</svg>`;
+  const res = `<svg ${BASE} width="${size}" height="${size}" ${extra}>${inner}</svg>`;
+  iconCache.set(cacheKey, res);
+  return res;
 };

@@ -4,7 +4,7 @@ import { mk, Empty, Card, Row } from '../components.js';
 import { icon } from '../icons.js';
 import { history, progress } from '../storage.js';
 
-function Hero(items, logos, onCard) {
+function Hero(items, initialLogos = {}, onCard) {
   let idx = 0,
     animating = false;
   const hero = mk('div', 'hero');
@@ -18,10 +18,11 @@ function Hero(items, logos, onCard) {
       const year = (item.release_date || item.first_air_date || '').slice(0, 4);
       const rating = item.vote_average?.toFixed(1);
       const backdrop = img(item.backdrop_path, 'w1280');
-      const logoUrl = logos[item.id];
+      const logoUrl = initialLogos[item.id];
       const slide = mk('div', 'hero-slide');
+      slide.dataset.id = item.id;
       slide.innerHTML = `
-        ${backdrop ? `<img class="hero-bg" src="${backdrop}" alt="">` : ''}
+        ${backdrop ? `<img class="hero-bg" src="${backdrop}" alt="" width="1280" height="720" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">` : ''}
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-badges">
@@ -29,11 +30,13 @@ function Hero(items, logos, onCard) {
             ${year ? `<span class="badge-plain">${year}</span>` : ''}
             <span class="badge-plain">${type === 'tv' ? 'Series' : 'Film'}</span>
           </div>
-          ${
-            logoUrl
-              ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoUrl}" alt="${title}"></div>`
-              : `<h1 class="hero-title">${title}</h1>`
-          }
+          <div class="hero-title-area">
+            ${
+              logoUrl
+                ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoUrl}" alt="${title}" decoding="async"></div>`
+                : `<h1 class="hero-title">${title}</h1>`
+            }
+          </div>
           <p class="hero-overview">${(item.overview || '').slice(0, 200)}${(item.overview?.length || 0) > 200 ? '…' : ''}</p>
           <div class="hero-btns">
             <button class="hero-btn primary" data-play="1">
@@ -44,12 +47,8 @@ function Hero(items, logos, onCard) {
         </div>`;
       const playBtn = slide.querySelector('[data-play]');
       const infoBtn = slide.querySelector('[data-info]');
-      if (!playBtn || !infoBtn) {
-        console.warn(`Hero slide ${i}: buttons not found`, { playBtn: !!playBtn, infoBtn: !!infoBtn });
-        return null;
-      }
-      playBtn.addEventListener('click', () => onCard(item, type, true));
-      infoBtn.addEventListener('click', () => onCard(item, type, false));
+      if (playBtn) playBtn.addEventListener('click', () => onCard(item, type, true));
+      if (infoBtn) infoBtn.addEventListener('click', () => onCard(item, type, false));
       inner.appendChild(slide);
       return slide;
     } catch (err) {
@@ -58,7 +57,7 @@ function Hero(items, logos, onCard) {
     }
   }).filter(Boolean);
 
-  slides[0].classList.add('active');
+  if (slides[0]) slides[0].classList.add('active');
 
   const dotsEl = mk('div', 'hero-dots');
   inner.appendChild(dotsEl);
@@ -68,7 +67,7 @@ function Hero(items, logos, onCard) {
       .slice(0, 6)
       .map(
         (_, i) =>
-          `<button class="dot${i === idx ? ' active' : ''}" data-i="${i}"></button>`
+          `<button class="dot${i === idx ? ' active' : ''}" data-i="${i}" aria-label="Go to slide ${i + 1}"></button>`
       )
       .join('');
     dotsEl.querySelectorAll('.dot').forEach((d) =>
@@ -79,7 +78,7 @@ function Hero(items, logos, onCard) {
   }
 
   function goTo(next) {
-    if (next === idx || animating) return;
+    if (next === idx || animating || !slides[next]) return;
     animating = true;
     slides[idx].classList.remove('active');
     slides[idx].classList.add('prev');
@@ -97,6 +96,24 @@ function Hero(items, logos, onCard) {
     () => goTo((idx + 1) % Math.min(items.length, 6)),
     7000
   );
+
+  items.slice(0, 6).forEach(async (item) => {
+    if (initialLogos[item.id]) return;
+    try {
+      const t = item.media_type === 'tv' ? 'tv' : 'movie';
+      const u = await api.logo(t, item.id);
+      if (!u) return;
+      const targetSlide = inner.querySelector(`[data-id="${item.id}"]`);
+      if (targetSlide) {
+        const titleArea = targetSlide.querySelector('.hero-title-area');
+        if (titleArea) {
+          const title = item.title || item.name;
+          titleArea.innerHTML = `<div class="hero-logo-wrap"><img class="hero-logo" src="${u}" alt="${title}" decoding="async"></div>`;
+        }
+      }
+    } catch {}
+  });
+
   hero._stop = () => clearInterval(timer);
   return hero;
 }
@@ -128,28 +145,33 @@ function ToggleRow({ label, movieItems, tvItems, onCard }) {
     items.forEach((item) =>
       track.appendChild(Card({ item, type, onClick: onCard }))
     );
-    scroll.scrollLeft = scrollPositions[type];
+    scroll.scrollLeft = scrollPositions[type] || 0;
   }
 
-  scroll.addEventListener('scroll', () => {
-    scrollPositions[currentActiveType] = scroll.scrollLeft;
-  });
+  scroll.addEventListener(
+    'scroll',
+    () => {
+      scrollPositions[currentActiveType] = scroll.scrollLeft;
+    },
+    { passive: true }
+  );
 
   btnM.addEventListener('click', () => {
     if (currentActiveType === 'movie') return;
-
     scrollPositions[currentActiveType] = scroll.scrollLeft;
     currentActiveType = 'movie';
     btnM.classList.add('active');
     btnS.classList.remove('active');
+    btnS.classList.remove('series-active');
     renderCards(movieItems, 'movie');
   });
+
   btnS.addEventListener('click', () => {
     if (currentActiveType === 'tv') return;
-
     scrollPositions[currentActiveType] = scroll.scrollLeft;
     currentActiveType = 'tv';
     btnS.classList.add('active');
+    btnS.classList.add('series-active');
     btnM.classList.remove('active');
     renderCards(tvItems, 'tv');
   });
@@ -163,52 +185,24 @@ export async function HomeView(onCard) {
   root.innerHTML = `<div class="state-loader" style="min-height:60vh"><div class="spin-ring"><div></div><div></div><div></div><div></div></div></div>`;
 
   try {
-    const res = await Promise.allSettled([
+    const primaryRes = await Promise.allSettled([
       api.trending(),
       api.trendingMovies(),
       api.trendingTV(),
-      api.topRated(),
-      api.topRatedTV(),
-      api.netflixTV(),
-      api.hboTV(),
-      api.primeTV(),
-      api.appleTV(),
-      api.disneyTV(),
-      api.anime(),
     ]);
+
     const ok = (r) =>
       r.status === 'fulfilled'
         ? (r.value.results || []).filter((x) => x.poster_path)
         : [];
-    const [
-      trending,
-      tMov,
-      tTV,
-      topMov,
-      topTV,
-      netflix,
-      hbo,
-      prime,
-      apple,
-      disney,
-      anime,
-    ] = res.map(ok);
+
+    const [trending, tMov, tTV] = primaryRes.map(ok);
 
     root.innerHTML = '';
 
     const heroItems = trending.filter((x) => x.backdrop_path).slice(0, 6);
     if (heroItems.length) {
-      const logos = {};
-      await Promise.all(
-        heroItems.map(async (item) => {
-          try {
-            const t = item.media_type === 'tv' ? 'tv' : 'movie';
-            const u = await api.logo(t, item.id);
-            if (u) logos[item.id] = u;
-          } catch (err) { console.warn('Logo load failed', err); }
-        })
-      );
-      const hero = Hero(heroItems, logos, onCard);
+      const hero = Hero(heroItems, {}, onCard);
       root.appendChild(hero);
       root._stop = () => hero._stop?.();
     }
@@ -235,76 +229,87 @@ export async function HomeView(onCard) {
       );
     }
 
-    root.appendChild(
-      ToggleRow({
-        label: 'Trending',
-        movieItems: tMov.slice(0, 20),
-        tvItems: tTV.slice(0, 20),
-        onCard,
-      })
-    );
-    root.appendChild(
-      ToggleRow({
-        label: 'Top Rated',
-        movieItems: topMov.slice(0, 20),
-        tvItems: topTV.slice(0, 20),
-        onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'Netflix',
-        items: netflix.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'HBO / Max',
-        items: hbo.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'Prime Video',
-        items: prime.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'Apple TV+',
-        items: apple.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'Disney+',
-        items: disney.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
-    root.appendChild(
-      Row({
-        label: 'Anime',
-        items: anime.slice(0, 20),
-        type: 'tv',
-        badge: 'series',
-        onCard: onCard,
-      })
-    );
+    if (tMov.length || tTV.length) {
+      root.appendChild(
+        ToggleRow({
+          label: 'Trending',
+          movieItems: tMov.slice(0, 20),
+          tvItems: tTV.slice(0, 20),
+          onCard,
+        })
+      );
+    }
+
+    const secondaryContainer = mk('div', 'home-secondary-rows');
+    root.appendChild(secondaryContainer);
+
+    (async () => {
+      try {
+        const secRes = await Promise.allSettled([
+          api.topRated(),
+          api.topRatedTV(),
+          api.netflixTV(),
+          api.hboTV(),
+          api.primeTV(),
+          api.appleTV(),
+          api.disneyTV(),
+          api.anime(),
+        ]);
+
+        const [
+          topMov,
+          topTV,
+          netflix,
+          hbo,
+          prime,
+          apple,
+          disney,
+          anime,
+        ] = secRes.map(ok);
+
+        secondaryContainer.appendChild(
+          ToggleRow({
+            label: 'Top Rated',
+            movieItems: topMov.slice(0, 20),
+            tvItems: topTV.slice(0, 20),
+            onCard,
+          })
+        );
+        if (netflix.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'Netflix', items: netflix.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+        if (hbo.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'HBO / Max', items: hbo.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+        if (prime.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'Prime Video', items: prime.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+        if (apple.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'Apple TV+', items: apple.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+        if (disney.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'Disney+', items: disney.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+        if (anime.length) {
+          secondaryContainer.appendChild(
+            Row({ label: 'Anime', items: anime.slice(0, 20), type: 'tv', badge: 'series', onCard })
+          );
+        }
+      } catch (err) {
+        console.warn('Failed to load secondary rows:', err);
+      }
+    })();
+
   } catch (e) {
     root.innerHTML = '';
     root.appendChild(Empty('Failed to load', e.message));

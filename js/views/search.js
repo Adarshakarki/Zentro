@@ -1,14 +1,21 @@
 import { api } from '../api.js';
 import { mk, Card, Loader, Empty } from '../components.js';
-import { icon } from '../icons.js';
+
+let searchAbortCtrl = null;
 
 export async function SearchView(query, onCard) {
+  if (searchAbortCtrl) {
+    searchAbortCtrl.abort();
+  }
+  searchAbortCtrl = new AbortController();
+  const signal = searchAbortCtrl.signal;
+
   const root = mk('div', 'search-view');
   root.innerHTML = `<h2 class="page-heading">Results for <em>"${query}"</em></h2>`;
   root.appendChild(Loader());
 
   try {
-    const data = await api.search(query);
+    const data = await api.search(query, signal);
     const results = (data.results || []).filter(
       (x) =>
         x.poster_path && (x.media_type === 'movie' || x.media_type === 'tv')
@@ -33,6 +40,7 @@ export async function SearchView(query, onCard) {
       );
     root.appendChild(grid);
   } catch (e) {
+    if (e.name === 'AbortError') return root;
     root.querySelector('.state-loader')?.remove();
     root.appendChild(Empty('Search failed', e.message, 'alertCircle'));
   }
